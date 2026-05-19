@@ -1,63 +1,60 @@
 {
-  "layer": "top",
-  "position": "top",
-  "height": 32,
+    "layer": "top",
+    "position": "top",
+    "margin-top": 5,
+    "margin-left": 5,
+    "margin-right": 5,
+    "spacing": 0,
+    "modules-left": ["hyprland/workspaces"],
+    "modules-center": ["clock"],
+    "modules-right": ["network", "bluetooth", "battery", "cpu", "memory"],
 
-  "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["clock"],
-  "modules-right": ["network", "bluetooth", "battery", "cpu", "memory", "tray"],
-
-  "hyprland/workspaces": {
-    "disable-scroll": true,
-    "all-outputs": true
-  },
-
-  "clock": {
-    "format": "{:%I:%M %p}",
-    "tooltip-format": "{:%A, %d %B %Y}"
-  },
-
-  "network": {
-    "format-wifi": "  {signalStrength}%",
-    "format-ethernet": "󰈀  Connected",
-    "format-disconnected": "  Offline",
-    "on-click": "ghostty --class=com.waybar.tui -e wlctl"
-  },
-
-  "bluetooth": {
-    "format": " {status}",
-    "format-connected": " {device_alias}",
-    "tooltip-format": "{controller_alias}\t{controller_address}",
-    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
-    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
-    "on-click": "ghostty --class=com.waybar.tui -e bluetui" // Opens the full GUI only when clicked
-  },
-
-  "battery": {
-      "states": {
-          "warning": 30,
-          "critical": 15
-      },
-      "format": "{icon} {capacity}%",
-      "format-charging": " {capacity}%",
-      "format-plugged": " {capacity}%",
-      "format-full": "  {capacity}%",
-      "format-not-charging": "  {capacity}%",
-      "format-icons": ["", "", "", "", ""],
-      "interval": 60 // Increase interval to reduce CPU polling
-  },
-
-  "cpu": {
-    "format": "  {usage}%",
-    "on-click": "ghostty --class=com.waybar.tui -e btop" 
-  },
-
-  "memory": {
-    "format": "  {used}MB",
-    "on-click": "ghostty --class=com.waybar.tui -e btop"
-  },
-
-  "tray": {
-    "spacing": 10
-  }
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "disable-scroll": true,
+        "all-outputs": true
+    },
+    "clock": {
+        "format": "{:%A %H:%M}",
+        "tooltip": false
+    },
+    "network": {
+        "format-wifi": "   {signalStrength}%",
+        "format-ethernet": "󰈀  Connected",
+        "format-disconnected": "  Offline",
+        // "on-click": "~/.config/waybar/scripts/rofi-wifi.sh",
+        "on-click": "ghostty --class=com.waybar.tui -e wlctl"
+    },
+    "bluetooth": {
+        "format-on": "",
+        "format-off": "",
+        "format-disabled": "",
+        "format-connected": "  {device_alias}",
+        // "on-click": "~/.config/waybar/scripts/rofi-bluetooth.sh",
+        "on-click": "ghostty --class=com.waybar.tui -e bluetui", // Opens the full GUI only when clicked
+        "tooltip": false
+    },
+    "battery": {
+        "states": {
+            "warning": 30,
+            "critical": 15
+                },
+        "format": "{icon}  {capacity}%",
+        "format-charging": "  {capacity}%",
+        "format-plugged": "  {capacity}%",
+        "format-full": "   {capacity}%",
+        "format-not-charging": "   {capacity}%",
+        "format-icons": ["", "", "", "", ""],
+        "interval": 60 // Increase interval to reduce CPU polling
+    },
+    "cpu": {
+        "format": "  {usage}%",
+        "on-click": "ghostty --class=com.waybar.tui -e btop",
+        "tooltip": false
+    },
+    "memory": {
+        "format": "  {used}MB",
+        "on-click": "ghostty --class=com.waybar.tui -e btop",
+        "tooltip": false
+    }
 }
