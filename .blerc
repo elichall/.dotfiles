@@ -1,0 +1,5 @@
+
+ble-face -s filename_directory 'fg=blue'
+
+ble-face -s filename_other fg=white,nounderline
+

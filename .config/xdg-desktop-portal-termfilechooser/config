@@ -1,0 +1,7 @@
+
+[filechooser]
+cmd=/home/elichall/.config/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
+default_dir=/home/elichall
+[task]
+term=ghostty -e
+

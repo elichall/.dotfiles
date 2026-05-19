@@ -1,0 +1,21 @@
+
+[[mgr.prepend_keymap]]
+on = "<C-d>"
+run = "shell 'ripdrag \"$@\" -A -x -i 2>/dev/null &' --confirm"
+desc = "Drag and drop"
+
+[[mgr.prepend_keymap]]
+on = "y"
+run = [
+  "yank",
+  'shell -- for path in %s; do echo "file://$path"; done | wl-copy -t text/uri-list',
+]
+desc = "Yank to Wayland"
+
+[[mgr.prepend_keymap]]
+on = "x"
+run = [
+  "yank --cut",
+  'shell -- for path in %s; do echo "file://$path"; done | wl-copy -t text/uri-list',
+]
+desc = "Cut to Wayland"

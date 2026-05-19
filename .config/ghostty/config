@@ -1,0 +1,16 @@
+font-family = JetBrainsMono Nerd Font
+font-size = 13
+theme = Chalk
+window-decoration = false
+cursor-style = block
+
+background-opacity = 0.95
+background-blur-radius = 20
+
+# Optimization: Ensures Wayland native protocol 
+command = /usr/bin/bash
+
+confirm-close-surface = false
+
+
+
