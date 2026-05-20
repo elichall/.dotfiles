@@ -1,0 +1,54 @@
+/* Dark tint over active windows */
+window {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Precise bounding container for a horizontal 4-button array */
+grid {
+    margin-top: 350px;
+    margin-bottom: 350px;
+    margin-left: 550px;
+    margin-right: 550px;
+    background-color: #000000;
+    border: 2px solid #89b4fa;
+    border-radius: 14px;
+    padding: 12px;
+}
+
+/* Force buttons to be vertically elongated */
+button {
+    background-color: #11111b;
+    color: #cdd6f4;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #313244;
+    border-radius: 10px;
+    margin: 6px;
+    
+    /* Elongation geometry: High vertical padding, tight horizontal padding */
+    padding-top: 45px;
+    padding-bottom: 45px;
+    padding-left: 20px;
+    padding-right: 20px;
+    
+    font-size: 24px; /* Large scale icon presentation */
+    box-shadow: none;
+    text-shadow: none;
+    background-image: none;
+    transition: all 0.15s ease-in-out;
+}
+
+/* Focus and hover rules */
+button:focus,
+button:hover {
+    background-color: #1e1e2e;
+    color: #cba6f7;
+    border-color: #cba6f7;
+    outline: none;
+}
+
+/* Capsule boundary overrides */
+#lock { border-color: #89b4fa; }
+#suspend { border-color: #a6e3a1; }
+#reboot { border-color: #fab387; }
+#shutdown { border-color: #f38ba8; }

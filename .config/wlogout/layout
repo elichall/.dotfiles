@@ -1,0 +1,24 @@
+{
+    "label": "lock",
+    "action": "hyprlock",
+    "text": "🔒",
+    "keybind": "l"
+}
+{
+    "label": "suspend",
+    "action": "systemctl suspend",
+    "text": "🌙",
+    "keybind": "u"
+}
+{
+    "label": "reboot",
+    "action": "reboot",
+    "text": "🔄",
+    "keybind": "r"
+}
+{
+    "label": "shutdown",
+    "action": "shutdown now",
+    "text": "🛑",
+    "keybind": "s"
+}
