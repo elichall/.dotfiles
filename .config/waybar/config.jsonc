@@ -6,7 +6,7 @@
     "margin-right": 5,
     "spacing": 0,
     "modules-left": ["custom/arch", "hyprland/workspaces"],
-    "modules-center": ["clock"],
+    "modules-center": ["clock", "custom/weather"],
     "modules-right": ["network", "bluetooth", "cpu", "temperature", "memory", "battery"],
 
     "custom/arch": {
@@ -29,6 +29,13 @@
                 "today": "<span color='#ff6699'><b><u>{}</u></b></span>"
                 }
             }
+    },
+    "custom/weather": {
+        "format": "{}",
+        "tooltip": true,
+        "interval": 1800, /* Scrape interval: 30 minutes to minimize network overhead */
+        "exec": "curl -s 'wttr.in/?format=1' | sed 's/+//g'",
+        "on-click": "ghostty --class=com.waybar.tui -e bash -c 'wthrr; read -n 1 -p \"Press any key to exit...\"'"
     },
     "network": {
         "format-wifi": "   {signalStrength}%",
