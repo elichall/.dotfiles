@@ -5,34 +5,48 @@
     "margin-left": 5,
     "margin-right": 5,
     "spacing": 0,
-    "modules-left": ["hyprland/workspaces"],
+    "modules-left": ["custom/arch", "hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["network", "bluetooth", "battery", "cpu", "memory"],
+    "modules-right": ["network", "bluetooth", "cpu", "temperature", "memory", "battery"],
 
+    "custom/arch": {
+        "format": "",
+        "tooltip": false,
+        "on-click-right": "ghostty --class=com.waybar.tui -e bash -c 'fastfetch; read -n 1 -p \"Press any key to exit...\"'",
+        "on-click": "wlogout --layout $HOME/.config/wlogout/layout --css $HOME/.config/wlogout/style.css --buttons-per-row 4 --protocol layer-shell"
+    },
     "hyprland/workspaces": {
         "format": "{name}",
         "disable-scroll": true,
         "all-outputs": true
     },
     "clock": {
-        "format": "{:%A %H:%M}",
-        "tooltip": false
+        "format": "{:%A %I:%M}",
+        "tooltip-format": "<tt><big>{calendar}</big></tt>",
+        "calendar": {
+            "mode": "month", // Changes the view from year to just the current month
+            "format": {
+                "today": "<span color='#ff6699'><b><u>{}</u></b></span>"
+                }
+            }
     },
     "network": {
         "format-wifi": "   {signalStrength}%",
         "format-ethernet": "󰈀  Connected",
         "format-disconnected": "  Offline",
-        // "on-click": "~/.config/waybar/scripts/rofi-wifi.sh",
-        "on-click": "ghostty --class=com.waybar.tui -e wlctl"
+        "on-click": "ghostty --class=com.waybar.tui -e wlctl",
+        "tooltip-format": "    {ifname} via {gwaddr}",
+        "tooltip-format-wifi": "   {essid}\n    IP: {ipaddr}\n    Signal: {signalStrength}%\n {bandwidthUpBytes}   {bandwidthDownBytes}",
+        "tooltip-format-disconnected": "Disconnected"
     },
     "bluetooth": {
         "format-on": "",
         "format-off": "",
         "format-disabled": "",
-        "format-connected": "  {device_alias}",
-        // "on-click": "~/.config/waybar/scripts/rofi-bluetooth.sh",
+        "format-connected": "",
         "on-click": "ghostty --class=com.waybar.tui -e bluetui", // Opens the full GUI only when clicked
-        "tooltip": false
+        "tooltip-format": "{controller_alias}\t{controller_address}",
+        "tooltip-format-connected": "{device_alias}"
     },
     "battery": {
         "states": {
@@ -45,16 +59,24 @@
         "format-full": "   {capacity}%",
         "format-not-charging": "   {capacity}%",
         "format-icons": ["", "", "", "", ""],
-        "interval": 60 // Increase interval to reduce CPU polling
-    },
+        "interval": 60, 
+        "tooltip-format": "Time Remaining: {time}\nPower Draw {power}W"
+  },
     "cpu": {
         "format": "  {usage}%",
         "on-click": "ghostty --class=com.waybar.tui -e btop",
-        "tooltip": false
+        "tooltip-format": "Clock Speed: {avg_frequency} GHz\n\nCore Load Breakdown:\n{usage_per_core}"
+    },
+    "temperature": {
+        "thermal-zone": 2, // Tells waybar to look at your CPU zone
+        "critical-threshold": 80,
+        "format": "🌡️ {temperatureC}°C",
+        "format-critical": "🔥 {temperatureC}°C",
+        "on-click": "ghostty --class=com.waybar.tui -e btop"
     },
     "memory": {
         "format": "  {used}MB",
         "on-click": "ghostty --class=com.waybar.tui -e btop",
-        "tooltip": false
+        "tooltip-format": "RAM: {used:0.1f}GB / {total:0.1f}GB ({percentage}%)\nSwap: {swapUsed:0.1f}GB / {swapTotal:0.1f}GB ({swapPercentage}%)"
     }
 }
