@@ -140,5 +140,6 @@ eval "$(zoxide init bash)"
 # --- PERSONAL ENV VARS ---
 export TERM_FILE_CHOOSER="yazi"
 export FILEMANAGER="yazi"
+export EDITOR="nvim"
 
 [[ ${BLE_VERSION-} ]] && ble-attach

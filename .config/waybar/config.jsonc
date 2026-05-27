@@ -52,6 +52,7 @@
         "format-disabled": "",
         "format-connected": "",
         "on-click": "ghostty --class=com.waybar.tui -e bluetui", // Opens the full GUI only when clicked
+        "on-click-right": "bluetoothctl show | grep -q 'Powered: yes' && bluetoothctl power off || bluetoothctl power on",
         "tooltip-format": "{controller_alias}\t{controller_address}",
         "tooltip-format-connected": "{device_alias}"
     },
