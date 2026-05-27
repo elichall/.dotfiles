@@ -4,42 +4,37 @@ TERMINAL="ghostty"
 WORKSPACE="special:magic"
 
 kill_showoff() {
-  # 1. Instantly restore normal compositor keybinds
   hyprctl dispatch submap reset
 
-  if pgrep -f "$TERMINAL --class=magic-" >/dev/null; then
+  if pgrep -f "$TERMINAL --class=magic-dash" >/dev/null; then
     hyprctl dispatch togglespecialworkspace magic
     sleep 0.1
-    pkill -f "$TERMINAL --class=magic-"
+    pkill -f "$TERMINAL --class=magic-dash"
     pkill -f "showoff_watcher"
   fi
   exit 0
 }
 
-# Strict Argument Routing
+# 1. Handle Explicit Kill Flag
 if [[ "$1" == "--kill" ]]; then
   kill_showoff
-elif [[ -z "$1" ]]; then
-  # Hotkey Behavior
-  if pgrep -f "$TERMINAL --class=magic-" >/dev/null; then
-    kill_showoff
-  fi
-elif [[ "$1" == "--idle" ]]; then
-  # Idle Behavior
-  if pgrep -f "$TERMINAL --class=magic-" >/dev/null; then
-    exit 0
-  fi
-else
-  exit 0
 fi
 
-# Spawn Processes with Synchronous Geometry Rules
-hyprctl dispatch exec "[workspace $WORKSPACE; float; size 600 450; move 10 10] $TERMINAL --class=magic-fastfetch -e sh -c 'fastfetch && sleep infinity'"
-hyprctl dispatch exec "[workspace $WORKSPACE; float; size 1280 450; move 630 10] $TERMINAL --class=magic-btop -e btop"
-hyprctl dispatch exec "[workspace $WORKSPACE; float; size 600 600; move 10 470] $TERMINAL --class=magic-cava -e cava"
-hyprctl dispatch exec "[workspace $WORKSPACE; float; size 1280 600; move 630 470] $TERMINAL --class=magic-rotator -e bash -c '/home/$USER/.local/bin/term-rotator'"
+# 2. Handle Existing Processes
+if pgrep -f "$TERMINAL --class=magic-dash" >/dev/null; then
+  if [[ "$1" == "--idle" ]]; then
+    # If triggered by idle but processes are already running, abort to prevent overlap
+    exit 0
+  else
+    # If triggered by hotkey and processes are running, toggle them off
+    kill_showoff
+  fi
+fi
 
-# Dynamic Polling: Wait for Wayland to map at least one window
+# 3. Spawn a single process utilizing the Hyprland dwindle/master default allocation
+hyprctl dispatch exec "[workspace $WORKSPACE] $TERMINAL --class=magic-dash -e bash -c '/home/$USER/.local/bin/magic-layout'"
+
+# 4. Render Polling
 for i in {1..20}; do
   if hyprctl clients -j | jq -e '.[] | select(.workspace.name == "'"$WORKSPACE"'")' >/dev/null; then
     IS_VISIBLE=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .specialWorkspace.name')
@@ -51,25 +46,23 @@ for i in {1..20}; do
   sleep 0.1
 done
 
-# IDLE WATCHER DAEMON & COMPOSITOR LOCK
-if [[ "$1" == "--idle" ]]; then
-  # Lock keyboard and click input at the Wayland protocol level
-  hyprctl dispatch submap showoff_idle
+# 5. Global Input Interception (Hotkey & Idle)
+hyprctl dispatch submap showoff_idle
 
-  # Fork high-frequency mouse coordinate watcher
-  (
-    exec -a showoff_watcher bash -c '
-        sleep 0.5 # Allow physical mouse to settle from taking hands off
-        INITIAL_POS=$(hyprctl cursorpos)
-        while true; do
-            CURRENT_POS=$(hyprctl cursorpos)
-            if [ "$INITIAL_POS" != "$CURRENT_POS" ]; then
-                $HOME/.local/bin/showoff --kill
-                exit 0
-            fi
-            sleep 0.1 # Snappy 100ms evaluation loop
-        done
-        '
-  ) &
-  disown
-fi
+(
+  exec -a showoff_watcher bash -c '
+    # 500ms delay prevents the physical release of the Super+S hotkey from triggering an instant kill
+    sleep 0.5 
+    INITIAL_POS=$(hyprctl cursorpos)
+    
+    while true; do
+        CURRENT_POS=$(hyprctl cursorpos)
+        if [ "$INITIAL_POS" != "$CURRENT_POS" ]; then
+            $HOME/.local/bin/showoff --kill
+            exit 0
+        fi
+        sleep 0.1 
+    done
+    '
+) &
+disown

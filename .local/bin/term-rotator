@@ -1,18 +1,27 @@
 #!/bin/bash
 
-APPS=("cmatrix" "cbonsai --live" "asciiquarium" "sl" "pipes.sh")
+export TERM=xterm-256color
+
+APPS=(
+  "cmatrix -f -a -B"
+  "cbonsai -l --leaf='#,&,%'"
+  "asciiquarium -t"
+  "sl -a -c -e"
+  "pipes.sh -p 4 -t 3 -R"
+)
 
 while true; do
-  for app in "${APPS[@]}"; do
-    # Extract the base binary name to check existence (ignores arguments)
+  # 1. Ingest the randomized null-delimited strings into SHUFFLED_APPS
+  mapfile -t -d '' SHUFFLED_APPS < <(printf "%s\0" "${APPS[@]}" | shuf -z)
+
+  # 2. Iterate over the new array. The loop's stdin remains attached to the terminal.
+  for app in "${SHUFFLED_APPS[@]}"; do
     bin=$(echo "$app" | awk '{print $1}')
 
     if command -v "$bin" >/dev/null 2>&1; then
-      # Execute unquoted to allow bash word splitting for arguments
-      timeout 15s $app
+      timeout --foreground 15s bash -c "$app"
     else
-      echo "Binary not found: $bin"
-      sleep 2 # Throttle the loop if a binary is missing
+      sleep 2
     fi
     clear
   done
