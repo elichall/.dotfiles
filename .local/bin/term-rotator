@@ -1,0 +1,19 @@
+#!/bin/bash
+
+APPS=("cmatrix" "cbonsai --live" "asciiquarium" "sl" "pipes.sh")
+
+while true; do
+  for app in "${APPS[@]}"; do
+    # Extract the base binary name to check existence (ignores arguments)
+    bin=$(echo "$app" | awk '{print $1}')
+
+    if command -v "$bin" >/dev/null 2>&1; then
+      # Execute unquoted to allow bash word splitting for arguments
+      timeout 15s $app
+    else
+      echo "Binary not found: $bin"
+      sleep 2 # Throttle the loop if a binary is missing
+    fi
+    clear
+  done
+done
