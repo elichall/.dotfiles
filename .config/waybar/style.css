@@ -1,18 +1,21 @@
+@import "colors.css";
+
 * {
-    font-family: "JetBrains Mono", "Font Awesome 6 Free", "FontAwsome", sans-serif;
+    font-family: "JetBrains Mono", "Font Awesome 6 Free", "FontAwesome", sans-serif;
     font-size: 14px;
     font-weight: bold;
     min-height: 0;
 }
 
-/* 1. Remove padding from the main window */
+/* --- MAIN BAR CANVAS CONTROLS --- */
 window#waybar {
     background-color: rgba(0, 0, 0, 0.4);
     border-radius: 20px;
 }
-/* Ensure the parent-prefixed selector remains clean */
+
+/* --- ISOLATED ARCH LOGO (EXCLUDED FROM PALETTE INHERITANCE) --- */
 window#waybar #custom-arch {
-    color: #74c7ec;
+    color: #74c7ec; /* Preserved explicit Sapphire blue */
     font-size: 24px;
     background-color: transparent;
     border: none;
@@ -26,132 +29,75 @@ window#waybar #custom-arch {
         -2px  0px 0 #000000,  2px  0px 0 #000000;
 }
 
-/* --- ISOLATED ARCH LOGO HOVER EFFECT --- */
 window#waybar #custom-arch:hover {
     color: #89dceb;
     font-size: 26px;
     padding-left: 10px;
     padding-right: 10px;
-    
-    /* MAINTAIN SOLID 2px BOLD BLACK OUTLINE ON HOVER */
     text-shadow: 
-        /* Diagonals */
         -2px -2px 0 #000000,  2px -2px 0 #000000,
         -2px  2px 0 #000000,  2px  2px 0 #000000,
-        /* Straights */
          0px -2px 0 #000000,  0px  2px 0 #000000,
         -2px  0px 0 #000000,  2px  0px 0 #000000;
 }
-/* --- GLOBAL MODULE CAPSULE DEFINITIONS --- */
-#workspaces, #clock, #custom-weather, #network, #bluetooth, #battery, #memory {
-    background-color: #000000;
-    border-radius: 14px;
+
+/* --- UNIFIED COLOR-AGNOSTIC MODULE CAPSULES --- */
+#workspaces, #clock, #custom-weather, #network, #bluetooth, #battery, #memory, #cpu, #temperature {
+    background-color: @theme_bg;
+    border-color: @theme_muted;
+    color: @theme_accent;
     border-style: solid;
     border-width: 2px;
+    border-radius: 14px;
     padding: 2px 12px;
     margin-top: 4px;    
     margin-bottom: 4px; 
-    
-    margin-left: 4px;   /* Increase or decrease this value to space out bubbles */
-    margin-right: 4px;  /* Increase or decrease this value to space out bubbles */
+    margin-left: 4px;   
+    margin-right: 4px;  
 }
 
-/* Arch Logo Special Rules */
-#custom-arch {
-    border-color: #74c7ec; /* Sapphire / Arch Blue */
-    color: #74c7ec;
-    font-size: 16px; /* Slightly scaled up for icon visibility */
-    padding-left: 8px;
-    padding-right: 10px;
+/* Priority Accent Elements (Time Contextual Highlights) */
+#clock {
+    /* border-color: @theme_accent; */
 }
-/* Workspaces */
+
+/* Workspaces Node Layout Array */
 #workspaces {
-    border-color: #89b4fa; /* Blue */
+    border-color: @theme_muted;
     padding: 2px 6px;
 }
 #workspaces button {
-    color: #585b70;
+    color: @theme_muted;
     padding: 0 4px;
 }
 #workspaces button.active {
-    color: #89b4fa;
+    color: @theme_accent;
 }
 
-/* Clock */
-#clock {
-    border-color: #cba6f7; /* Purple */
-    color: #cba6f7;
+/* --- MERGED CPU & TEMPERATURE HYBRID CAPSULE --- */
+#cpu {
+    margin-right: 0px;
+    padding-right: 4px;
+    border-right-width: 0px;
+    border-radius: 14px 0px 0px 14px;
 }
-/* Unique identity styling for the weather capsule */
-#custom-weather {
-    border-color: #f9e2af; /* Warm Yellow border matching battery/sun metrics */
-    color: #f9e2af;
-}
-/* Network */
-#network {
-    border-color: #a6e3a1; /* Green */
-    color: #a6e3a1;
+#temperature {
+    margin-left: 0px;
+    padding-left: 4px;
+    border-left-width: 0px;
+    border-radius: 0px 14px 14px 0px;
 }
 
-/* Bluetooth */
-#bluetooth {
-    border-color: #89dceb; /* Cyan */
-    color: #89dceb;
-}
-
-/* Battery */
-#battery {
-    border-color: #f9e2af; /* Yellow */
-    color: #f9e2af;
-}
+/* Critical Warning Overrides (Maintains visibility during hardware events) */
 #battery.warning {
-    border-color: #fab387;
-    color: #fab387;
+    border-color: @theme_accent;
 }
-#battery.critical {
-    border-color: #f38ba8;
-    color: #f38ba8;
+#battery.critical, #temperature.critical {
+    border-color: #f38ba8; /* Fixed critical warning red */
     animation-name: blink;
     animation-duration: 1s;
     animation-timing-function: linear;
     animation-iteration-count: infinite;
-}
-
-/* --- MERGED CPU & TEMPERATURE BUBBLE --- */
-
-/* Base overrides for both modules to share margins and background */
-#cpu, #temperature {
-    background-color: #000000;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    border-style: solid;
-    border-width: 2px;
-    border-color: #f38ba8; /* Red border shared by both */
-    color: #f38ba8;
-    padding: 2px 12px;
-}
-
-/* CPU styling (Left side of the capsule) */
-#cpu {
-    margin-right: 0px; /* Remove space between modules */
-    padding-right: 4px; /* Tighten the gap inside */
-    border-right-width: 0px; /* Hide the middle dividing line */
-    border-radius: 14px 0px 0px 14px; /* Round only the left corners */
-}
-
-/* Temperature styling (Right side of the capsule) */
-#temperature {
-    margin-left: 0px; /* Remove space between modules */
-    padding-left: 4px; /* Tighten the gap inside */
-    border-left-width: 0px; /* Hide the middle dividing line */
-    border-radius: 0px 14px 14px 0px; /* Round only the right corners */
-}
-
-
-/* Memory */
-#memory {
-    border-color: #fab387; /* Peach */
-    color: #fab387;
 }
 
 @keyframes blink {
@@ -161,15 +107,15 @@ window#waybar #custom-arch:hover {
     }
 }
 
-/* tooltup formating */
+/* Tooltip Context Boxes */
 tooltip {
-    background: #000000;
-    border: 2px solid #89b4fa; /* Blue border styling */
+    background: @theme_bg;
+    border: 2px solid @theme_accent;
     border-radius: 10px;
     padding: 8px;
 }
 tooltip label {
     font-family: "JetBrains Mono";
-    color: #cdd6f4; /* Light text */
+    color: @theme_fg;
     font-size: 13px;
 }

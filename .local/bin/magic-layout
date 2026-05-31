@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Define session name
+SESSION="showoff"
+
+# Check if session already exists; if not, create it
+if ! tmux has-session -t $SESSION 2>/dev/null; then
+    # Spawn Pane 1 (Top Left)
+    tmux new-session -d -s $SESSION 'fastfetch && sleep infinity'
+    
+    # Split Pane 1 horizontally for Pane 2 (Top Right)
+    # -p 65 assigns 65% of the total width to btop
+    tmux split-window -h -p 65 'btop'
+    
+    # Select Pane 1, split vertically for Pane 3 (Bottom Left)
+    tmux select-pane -t 0
+    tmux split-window -v 'cava'
+    
+    # Select Pane 2, split vertically for Pane 4 (Bottom Right)
+    tmux select-pane -t 2
+    tmux split-window -v '/home/'$USER'/.local/bin/term-rotator'
+fi
+
+# Attach Ghostty to the session
+tmux attach-session -t $SESSION
