@@ -1,14 +1,8 @@
 {
-    "label": "lock",
-    "action": "hyprlock",
-    "text": "🔒",
-    "keybind": "l"
-}
-{
-    "label": "suspend",
-    "action": "systemctl suspend",
-    "text": "🌙",
-    "keybind": "u"
+    "label": "shutdown",
+    "action": "shutdown now",
+    "text": "🛑",
+    "keybind": "s"
 }
 {
     "label": "reboot",
@@ -17,8 +11,14 @@
     "keybind": "r"
 }
 {
-    "label": "shutdown",
-    "action": "shutdown now",
-    "text": "🛑",
-    "keybind": "s"
+    "label": "suspend",
+    "action": "systemctl suspend",
+    "text": "🌙",
+    "keybind": "u"
+}
+{
+    "label": "lock",
+    "action": "hyprlock",
+    "text": "🔒",
+    "keybind": "l"
 }

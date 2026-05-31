@@ -6,8 +6,9 @@ APPS=(
   "cmatrix -f -a -B"
   "cbonsai -l --leaf='#,&,%'"
   "asciiquarium -t"
-  "sl -a -c -e"
-  "pipes.sh -p 4 -t 3 -R"
+  "sl -a -c -e | lolcat 0.0001"
+  "pipes.sh -p 4 -t 3 -R -r 0"
+  "fortune | cowsay -f tux | lolcat && sleep infinity"
 )
 
 while true; do

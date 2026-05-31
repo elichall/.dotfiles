@@ -1,3 +1,5 @@
+@import "../waybar/colors.css";
+
 /* Dark tint over active windows */
 window {
     background-color: rgba(0, 0, 0, 0.4);
@@ -9,19 +11,19 @@ grid {
     margin-bottom: 350px;
     margin-left: 550px;
     margin-right: 550px;
-    background-color: #000000;
-    border: 2px solid #89b4fa;
+    background-color: @theme_bg;
+    border: 2px solid @theme_accent;
     border-radius: 14px;
     padding: 12px;
 }
 
 /* Force buttons to be vertically elongated */
 button {
-    background-color: #11111b;
-    color: #cdd6f4;
+    background-color: rgba(255, 255, 255, 0.03); /* Subtle contrast tint above base background */
+    color: @theme_fg;
     border-style: solid;
     border-width: 2px;
-    border-color: #313244;
+    border-color: @theme_muted;
     border-radius: 10px;
     margin: 6px;
     
@@ -41,14 +43,18 @@ button {
 /* Focus and hover rules */
 button:focus,
 button:hover {
-    background-color: #1e1e2e;
-    color: #cba6f7;
-    border-color: #cba6f7;
+    background-color: @theme_muted;
+    color: @theme_accent;
+    border-color: @theme_accent;
     outline: none;
 }
 
-/* Capsule boundary overrides */
-#lock { border-color: #89b4fa; }
-#suspend { border-color: #a6e3a1; }
-#reboot { border-color: #fab387; }
-#shutdown { border-color: #f38ba8; }
+/* Capsule boundary overrides stripped of explicit colors to maintain agnostic priority */
+#lock, #suspend, #reboot, #shutdown { 
+    border-color: @theme_muted; 
+}
+
+/* Maintain active target focus distinction during selection hover */
+#lock:hover, #suspend:hover, #reboot:hover, #shutdown:hover {
+    border-color: @theme_accent;
+}

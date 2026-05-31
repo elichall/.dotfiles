@@ -1,3 +1,6 @@
+# Prepend $os to the default layout matrix
+format = """$os$directory$git_branch$git_status$character"""
+
 add_newline = false
 
 [line_break]
@@ -5,3 +8,12 @@ disabled = true
 
 [cmd_duration]
 disabled = true
+
+# --- ISOLATED OS MODULE CONFIGURATION ---
+[os]
+disabled = false
+format = "[$symbol]($style) "
+style = "bold #74c7ec" # Sapphire / Arch Blue accent color
+
+[os.symbols]
+Arch = ""

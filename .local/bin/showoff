@@ -9,7 +9,13 @@ kill_showoff() {
   if pgrep -f "$TERMINAL --class=magic-dash" >/dev/null; then
     hyprctl dispatch togglespecialworkspace magic
     sleep 0.1
+
+    # Kill the Wayland terminal client
     pkill -f "$TERMINAL --class=magic-dash"
+
+    # Explicitly destroy the tmux session and all background child processes
+    tmux kill-session -t showoff 2>/dev/null
+
     pkill -f "showoff_watcher"
   fi
   exit 0
@@ -32,7 +38,7 @@ if pgrep -f "$TERMINAL --class=magic-dash" >/dev/null; then
 fi
 
 # 3. Spawn a single process utilizing the Hyprland dwindle/master default allocation
-hyprctl dispatch exec "[workspace $WORKSPACE] $TERMINAL --class=magic-dash -e bash -c '/home/$USER/.local/bin/magic-layout'"
+hyprctl dispatch exec "[workspace $WORKSPACE] $TERMINAL --class=magic-dash --background-opacity=0.7 -e bash -c '/home/$USER/.local/bin/magic-layout'"
 
 # 4. Render Polling
 for i in {1..20}; do

@@ -1,10 +1,10 @@
 font-family = JetBrainsMono Nerd Font
 font-size = 13
-theme = Chalk
+theme = "IC Green PPL"
 window-decoration = false
 cursor-style = block
 
-background-opacity = 0.95
+background-opacity = 0.80
 background-blur-radius = 20
 
 # Optimization: Ensures Wayland native protocol 
@@ -12,5 +12,5 @@ command = /usr/bin/bash
 
 confirm-close-surface = false
 
-
-
+# Sourced dynamically by the global theme engine switcher
+config-file = ?~/.config/ghostty/active_theme

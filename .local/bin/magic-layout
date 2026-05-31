@@ -1,25 +1,35 @@
 #!/bin/bash
 
-# Define session name
 SESSION="showoff"
 
-# Check if session already exists; if not, create it
 if ! tmux has-session -t $SESSION 2>/dev/null; then
-    # Spawn Pane 1 (Top Left)
-    tmux new-session -d -s $SESSION 'fastfetch && sleep infinity'
-    
-    # Split Pane 1 horizontally for Pane 2 (Top Right)
-    # -p 65 assigns 65% of the total width to btop
-    tmux split-window -h -p 65 'btop'
-    
-    # Select Pane 1, split vertically for Pane 3 (Bottom Left)
-    tmux select-pane -t 0
-    tmux split-window -v 'cava'
-    
-    # Select Pane 2, split vertically for Pane 4 (Bottom Right)
-    tmux select-pane -t 2
-    tmux split-window -v '/home/'$USER'/.local/bin/term-rotator'
+  tmux new-session -d -s $SESSION
+
+  # Primary X-Axis Split (Creates Left and Right columns)
+  # -h creates a horizontal separation. The new right pane gets 65% of the width.
+  tmux split-window -h -p 50
+
+  # Left Column Y-Axis Split
+  tmux select-pane -t 0
+  # -v creates a vertical separation. The new bottom pane gets 30% of the left column height.
+  tmux split-window -v -p 20
+  tmux select-pane -t 0
+  tmux split-window -v -p 90
+  tmux select-pane -t 0
+  tmux split-window -h -p 100
+
+  # Right Column Y-Axis Split
+  tmux select-pane -t 4
+  # The new bottom pane gets 75% of the right column height.
+  tmux split-window -v -p 55
+
+  # Dispatch execution strings to the stable PTY nodes
+  tmux send-keys -t 2 "exec sh -c 'fastfetch --structure-disabled colors && sleep infinity'" C-m
+  tmux send-keys -t 4 "exec /home/$USER/.local/bin/term-rotator" C-m
+  tmux send-keys -t 3 "exec cava" C-m
+  tmux send-keys -t 5 "exec btop" C-m
+  tmux send-keys -t 0 "exec tty-clock -t -B -s -C 5" C-m
+  tmux send-keys -t 1 "exec gping 1.1.1.1" C-m
 fi
 
-# Attach Ghostty to the session
 tmux attach-session -t $SESSION
