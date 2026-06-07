@@ -42,7 +42,7 @@ EOF
 if command -v waypaper &>/dev/null; then
   waypaper --wallpaper "$WALLPAPER"
 elif command -v swww &>/dev/null; then
-  swww img "$WALLPAPER" --transition-type simple
+  swww img "$WALLPAPER" --transition-type simple --outputs all
 fi
 
 # 4. SUB-SCRIPT CASCADE: Execute the color variable compiler matrix
