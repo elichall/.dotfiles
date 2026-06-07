@@ -1,63 +1,102 @@
 #!/bin/bash
 
 TERMINAL="ghostty"
-WORKSPACE="special:magic"
+WORKSPACE_PRI="special:magic"
+WORKSPACE_SEC="special:magic_sec"
+
+# 1. Hardware Matrix Detection
+ACTIVE_MONITOR=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name')
+MON_COUNT=$(hyprctl monitors -j | jq length)
+MON_PRIMARY=$(hyprctl monitors -j | jq -r '.[0].name')
+
+if [ "$MON_COUNT" -gt 1 ]; then
+  MON_SECONDARY=$(hyprctl monitors -j | jq -r '.[1].name')
+fi
 
 kill_showoff() {
   hyprctl dispatch submap reset
 
-  if pgrep -f "$TERMINAL --class=magic-dash" >/dev/null; then
-    hyprctl dispatch togglespecialworkspace magic
+  if pgrep -f "$TERMINAL --class=magic-" >/dev/null; then
+    # Toggle primary off if visible
+    if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_PRIMARY'") | .specialWorkspace.name')" == "$WORKSPACE_PRI" ]; then
+      hyprctl dispatch focusmonitor "$MON_PRIMARY"
+      hyprctl dispatch togglespecialworkspace magic
+    fi
+
+    # Toggle secondary off if visible
+    if [ "$MON_COUNT" -gt 1 ]; then
+      if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_SECONDARY'") | .specialWorkspace.name')" == "$WORKSPACE_SEC" ]; then
+        hyprctl dispatch focusmonitor "$MON_SECONDARY"
+        hyprctl dispatch togglespecialworkspace magic_sec
+      fi
+    fi
+
+    # Restore original input focus
+    hyprctl dispatch focusmonitor "$ACTIVE_MONITOR"
+
     sleep 0.1
 
-    # Kill the Wayland terminal client
-    pkill -f "$TERMINAL --class=magic-dash"
-
-    # Explicitly destroy the tmux session and all background child processes
+    pkill -f "$TERMINAL --class=magic-"
     tmux kill-session -t showoff 2>/dev/null
-
+    # Explicitly destroy the isolated tmux server and its socket
+    tmux -L magic_socket kill-server 2>/dev/null
     pkill -f "showoff_watcher"
   fi
   exit 0
 }
 
-# 1. Handle Explicit Kill Flag
+# 2. Strict Argument Routing
 if [[ "$1" == "--kill" ]]; then
   kill_showoff
 fi
 
-# 2. Handle Existing Processes
-if pgrep -f "$TERMINAL --class=magic-dash" >/dev/null; then
+if pgrep -f "$TERMINAL --class=magic-" >/dev/null; then
   if [[ "$1" == "--idle" ]]; then
-    # If triggered by idle but processes are already running, abort to prevent overlap
     exit 0
   else
-    # If triggered by hotkey and processes are running, toggle them off
     kill_showoff
   fi
 fi
 
-# 3. Spawn a single process utilizing the Hyprland dwindle/master default allocation
-hyprctl dispatch exec "[workspace $WORKSPACE] $TERMINAL --class=magic-dash --background-opacity=0.7 -e bash -c '/home/$USER/.local/bin/magic-layout'"
+# 3. Targeted Spawning
+# Explicitly force the primary dashboard to the primary display
+hyprctl dispatch exec "[workspace $WORKSPACE_PRI; monitor $MON_PRIMARY] $TERMINAL --class=magic-dash --background-opacity=0.7 -e bash -c '/home/$USER/.local/bin/magic-layout'"
 
-# 4. Render Polling
+# If a secondary display is connected, spawn the rotator maximized on its own special workspace
+if [ "$MON_COUNT" -gt 1 ]; then
+  hyprctl dispatch exec "[workspace $WORKSPACE_SEC; monitor $MON_SECONDARY] $TERMINAL --class=magic-sec --background-opacity=0.7 -e bash -c '/home/$USER/.local/bin/term-rotator'"
+fi
+
+# 4. Synchronous Render Polling & Toggling
 for i in {1..20}; do
-  if hyprctl clients -j | jq -e '.[] | select(.workspace.name == "'"$WORKSPACE"'")' >/dev/null; then
-    IS_VISIBLE=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .specialWorkspace.name')
-    if [ "$IS_VISIBLE" != "$WORKSPACE" ]; then
+  if hyprctl clients -j | jq -e '.[] | select(.workspace.name == "'"$WORKSPACE_PRI"'")' >/dev/null; then
+
+    # Deploy Primary
+    if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_PRIMARY'") | .specialWorkspace.name')" != "$WORKSPACE_PRI" ]; then
+      hyprctl dispatch focusmonitor "$MON_PRIMARY"
       hyprctl dispatch togglespecialworkspace magic
     fi
+
+    # Deploy Secondary
+    if [ "$MON_COUNT" -gt 1 ]; then
+      if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_SECONDARY'") | .specialWorkspace.name')" != "$WORKSPACE_SEC" ]; then
+        hyprctl dispatch focusmonitor "$MON_SECONDARY"
+        hyprctl dispatch togglespecialworkspace magic_sec
+      fi
+    fi
+
+    # Restore original focus before intercepting inputs
+    hyprctl dispatch focusmonitor "$ACTIVE_MONITOR"
     break
   fi
   sleep 0.1
 done
 
-# 5. Global Input Interception (Hotkey & Idle)
+# 5. Global Input Interception
 hyprctl dispatch submap showoff_idle
 
 (
   exec -a showoff_watcher bash -c '
-    # 500ms delay prevents the physical release of the Super+S hotkey from triggering an instant kill
     sleep 0.5 
     INITIAL_POS=$(hyprctl cursorpos)
     

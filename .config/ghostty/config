@@ -1,10 +1,12 @@
 font-family = JetBrainsMono Nerd Font
+font-family = "Noto Sans Mono CJK JP"
+
 font-size = 13
 theme = "IC Green PPL"
 window-decoration = false
 cursor-style = block
 
-background-opacity = 0.80
+background-opacity = 0.90
 background-blur-radius = 20
 
 # Optimization: Ensures Wayland native protocol 
