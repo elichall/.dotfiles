@@ -112,6 +112,11 @@ killall -USR2 waybar
 hyprctl reload
 killall -SIGUSR2 ghostty
 
+# Bypasses key simulation; forces atomic execution via background RPC channels
+find "${XDG_RUNTIME_DIR:-/tmp}" -type s 2>/dev/null | grep "nvim" | while read -r server; do
+    nvim --server "$server" --remote-expr "execute('lua package.loaded[\"lean.core.palette\"] = nil; vim.cmd(\"colorscheme lean_sync\")')" >/dev/null 2>&1 &
+done
+
 if [ -n "$TMUX" ]; then
     tmux source-file "$HOME/.tmux.conf"
 fi
