@@ -108,13 +108,15 @@ return {
       -- ==============================================================================
       -- NATIVE EXECUTION INITIALIZATION LOOP ($O(N)$ Compilation)
       -- ==============================================================================
+      local has_blink, blink = pcall(require, "blink.cmp")
+      local capabilities = has_blink and blink.get_lsp_capabilities() or vim.lsp.protocol.make_client_capabilities()
+
       for _, server_name in ipairs(target_servers) do
         local config = custom_configs[server_name] or {}
+        config.capabilities = vim.tbl_deep_extend("force", config.capabilities or {}, capabilities)
 
-        -- Invoke the core C-level engine registration mechanism
+        -- Use native vim.lsp.config instead of the deprecated nvim-lspconfig framework
         vim.lsp.config(server_name, config)
-
-        -- Activate the server context for its specified target file extensions
         vim.lsp.enable(server_name)
       end
     end,

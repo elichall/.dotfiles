@@ -1,5 +1,30 @@
 local my_theme_group = vim.api.nvim_create_augroup("LanguageThemes", { clear = true })
 
+-- Target scope isolation for prose-centric filetypes
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown", "text", "tex" },
+  callback = function(args)
+    -- Spell checking
+    vim.opt_local.spell = true
+    vim.opt_local.spelllang = { "en_us" }
+    
+    -- Word processing behavior
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+    vim.opt_local.breakindent = true
+    vim.opt_local.colorcolumn = ""
+    vim.opt_local.list = false
+    
+    -- (Optional) Hide markdown syntax markers
+    -- vim.opt_local.conceallevel = 2
+
+    -- Make j and k move visually instead of by physical line
+    vim.keymap.set({"n", "v"}, "j", "gj", { buffer = args.buf })
+    vim.keymap.set({"n", "v"}, "k", "gk", { buffer = args.buf })
+  end,
+  desc = "Local spell check and word-processor settings for structural prose",
+})
+
 vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
   group = my_theme_group,
   callback = function(args)

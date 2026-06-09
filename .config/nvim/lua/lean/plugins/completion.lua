@@ -6,6 +6,7 @@ return {
     event = "InsertEnter",
     dependencies = {
       "rafamadriz/friendly-snippets", -- Core snippets database engine
+      "ribru17/blink-cmp-spell",
     },
     opts = {
       -- Explicitly drop the default keymaps layer to isolate our key actions
@@ -26,6 +27,19 @@ return {
       -- Component Data Providers
       sources = {
         default = { "lsp", "path", "snippets", "buffer" },
+        per_filetype = {
+          markdown = { "lsp", "path", "snippets", "buffer", "spell" },
+          text = { "path", "snippets", "buffer", "spell" },
+          tex = { "lsp", "path", "snippets", "buffer", "spell" },
+          plaintex = { "lsp", "path", "snippets", "buffer", "spell" },
+        },
+        providers = {
+          spell = {
+            name = "Spell",
+            module = "blink-cmp-spell",
+            opts = {},
+          },
+        },
       },
 
       -- Target Behavior Adjustments

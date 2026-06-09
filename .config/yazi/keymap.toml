@@ -7,15 +7,35 @@ desc = "Drag and drop"
 [[mgr.prepend_keymap]]
 on = "y"
 run = [
-  "yank",
-  'shell -- for path in %s; do echo "file://$path"; done | wl-copy -t text/uri-list',
+  '''shell -- echo "mode:copy"; for path in %*; do echo "file://$path"; done | wl-copy -t text/uri-list''',
+  "yank"
 ]
-desc = "Yank to Wayland"
+desc = "Yank to Wayland Clipboard"
 
 [[mgr.prepend_keymap]]
 on = "x"
 run = [
-  "yank --cut",
-  'shell -- for path in %s; do echo "file://$path"; done | wl-copy -t text/uri-list',
+  '''shell -- echo "mode:cut"; for path in %*; do echo "file://$path"; done | wl-copy -t text/uri-list''',
+  "yank --cut"
 ]
-desc = "Cut to Wayland"
+desc = "Cut to Wayland Clipboard"
+
+[[mgr.prepend_keymap]]
+on = "p"
+run = [
+  '''shell -- 
+    clipboard=$(wl-paste -t text/uri-list)
+    mode=$(echo "$clipboard" | grep "^mode:" | cut -d: -f2)
+    
+    echo "$clipboard" | grep "^file://" | sed 's|^file://||' | while read -r file; do
+      if [ "$mode" = "cut" ]; then
+        mv "$file" ./
+      else
+        cp -r "$file" ./
+      fi
+    done
+  ''',
+  "unyank"
+]
+desc = "Paste & Sync from Wayland Clipboard"
+
