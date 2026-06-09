@@ -33,3 +33,5 @@ dotupdate() {
   # Push to remote
   dotgit push
 }
+
+alias nvlean="NVIM_APPNAME=nvim-lean nvim"

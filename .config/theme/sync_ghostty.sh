@@ -4,69 +4,114 @@
 PALETTE_FILE="$HOME/.config/theme/palette.conf"
 WAYBAR_CSS="$HOME/.config/waybar/colors.css"
 TMUX_COLORS="$HOME/.config/tmux/colors.tmux"
+NVIM_PALETTE="$HOME/.config/nvim-lean/lua/lean/core/palette.lua"
 
-# Ensure target directories exist before writing
-mkdir -p "$HOME/.config/theme" "$HOME/.config/waybar" "$HOME/.config/tmux"
+# Ensure all structural target directories exist before writing assets
+mkdir -p "$HOME/.config/theme" "$HOME/.config/waybar" "$HOME/.config/tmux" \
+         "$HOME/.config/nvim/lua/lean/core"
 
 # 1. Query Ghostty's raw runtime configuration tree
 G_CONFIG=$(ghostty +show-config)
 
 get_hex_base() {
-  local match
-  match=$(echo "$G_CONFIG" | grep -E "^$1[[:space:]]*=" | head -n1 | cut -d'=' -f2 | tr -d '[:space:]#')
-  echo "${match//[\"\']/}"
+    local match
+    match=$(echo "$G_CONFIG" | grep -E "^$1[[:space:]]*=" | head -n1 | cut -d'=' -f2 | tr -d '[:space:]#')
+    echo "${match//[\"\']}"
 }
 
 get_palette_hex() {
-  local index="$1"
-  echo "$G_CONFIG" | grep -E "^palette[[:space:]]*=[[:space:]]*${index}=" | head -n1 | cut -d'#' -f2 | tr -d '[:space:]'
+    local index="$1"
+    echo "$G_CONFIG" | grep -E "^palette[[:space:]]*=[[:space:]]*${index}=" | head -n1 | cut -d'#' -f2 | tr -d '[:space:]'
 }
 
+# 2. Extract base properties cleanly using structured filtering rules
 BG=$(get_hex_base "background")
 FG=$(get_hex_base "foreground")
-ACCENT=$(get_palette_hex "2") # ANSI 2 (Green)
-MUTED=$(get_palette_hex "8")  # ANSI 8 (Bright Black / Muted Gray)
 
+# Isolate the exact 16-color ANSI hex codes from Ghostty's engine memory
+C0_BLACK=$(get_palette_hex "0")
+C1_RED=$(get_palette_hex "1")
+C2_GREEN=$(get_palette_hex "2")
+C3_YELLOW=$(get_palette_hex "3")
+C4_BLUE=$(get_palette_hex "4")
+C5_MAGENTA=$(get_palette_hex "5")
+C6_CYAN=$(get_palette_hex "6")
+C7_WHITE=$(get_palette_hex "7")
+C8_GRAY=$(get_palette_hex "8")
+
+# Strict fallback verification overrides to handle potential missing keys
 BG=${BG:-"000000"}
 FG=${FG:-"cdd6f4"}
-ACCENT=${ACCENT:-"a6e3a1"}
-MUTED=${MUTED:-"585b70"}
+C0_BLACK=${C0_BLACK:-"1e1e2e"}
+C1_RED=${C1_RED:-"f38ba8"}
+C2_GREEN=${C2_GREEN:-"a6e3a1"}
+C3_YELLOW=${C3_YELLOW:-"f9e2af"}
+C4_BLUE=${C4_BLUE:-"89b4fa"}
+C5_MAGENTA=${C5_MAGENTA:-"cba6f7"}
+C6_CYAN=${C6_CYAN:-"89dceb"}
+C7_WHITE=${C7_WHITE:-"cdd6f4"}
+C8_GRAY=${C8_GRAY:-"585b70"}
 
-# [Previous Hyprland and Waybar file generation omitted for brevity but preserved intact]
-# ... (Keep your existing cat updates for PALETTE_FILE and WAYBAR_CSS here) ...
+# [Previous Hyprland, Waybar, and Tmux file generations preserved intact]
+cat <<EOF > "$PALETTE_FILE"
+\$bg = rgb($BG)
+\$fg = rgb($FG)
+\$accent = rgb($C2_GREEN)
+\$muted = rgb($C8_GRAY)
+\$bg_hex = $BG
+\$fg_hex = $FG
+\$accent_hex = $C2_GREEN
+\$muted_hex = $C8_GRAY
+EOF
 
-# ==============================================================================
-# GENERATE DYNAMIC COLOR-AGNOSTIC TMUX STYLING DEFINITIONS
-# ==============================================================================
-cat <<EOF >"$TMUX_COLORS"
-# Automatically generated from active Ghostty profile
-# 1. Status Bar Foundation Structure
+cat <<EOF > "$WAYBAR_CSS"
+/* Dynamic Theme Colors */
+@define-color theme_bg #$BG;
+@define-color theme_fg #$FG;
+@define-color theme_accent #$C2_GREEN;
+@define-color theme_muted #$C8_GRAY;
+EOF
+
+cat <<EOF > "$TMUX_COLORS"
 set -g status-style "bg=#$BG,fg=#$FG"
-set -g status-left-length 40
-set -g status-left "#[fg=#$BG,bg=#$ACCENT,bold] 󰨖 #S #[bg=default,fg=default] "
-set -g status-right "#[fg=#$MUTED,bg=default]󰇄 #H "
-
-# 2. Inactive vs Active Window List Elements
-set -g window-status-format "#[fg=#$MUTED,bg=default] #I:#W "
-set -g window-status-current-format "#[fg=#$ACCENT,bg=#$MUTED,bold] #I:#W "
+set -g status-left "#[fg=#$BG,bg=#$C2_GREEN,bold] 󰨖 #S #[bg=default,fg=default] "
+set -g status-right "#[fg=#$C8_GRAY,bg=default]󰇄 #H "
+set -g window-status-format "#[fg=#$C8_GRAY,bg=default] #I:#W "
+set -g window-status-current-format "#[fg=#$C2_GREEN,bg=#$C8_GRAY,bold] #I:#W "
 set -g window-status-separator ""
-
-# 3. Structural Pane Dividing Lines
-set -g pane-border-style "fg=#$MUTED"
-set -g pane-active-border-style "fg=#$ACCENT"
-
-# 4. Command Input and Message Bar Line Rules
-set -g message-style "bg=#$MUTED,fg=#$ACCENT,bold"
+set -g pane-border-style "fg=#$C8_GRAY"
+set -g pane-active-border-style "fg=#$C2_GREEN"
+set -g message-style "bg=#$C8_GRAY,fg=#$C2_GREEN,bold"
 EOF
 
 # ==============================================================================
-# ATOMIC GRAPHIC PIPELINE HOT-RELOADS
+# GENERATE DYNAMIC NEOVIM LUA PALETTE
+# ==============================================================================
+cat <<EOF > "$NVIM_PALETTE"
+-- lua/lean/core/palette.lua
+-- This file is safely updated by your global engine, or serves as a static fallback.
+return {
+  bg       = "#$BG",
+  fg       = "#$FG",
+  black    = "#$C0_BLACK",
+  red      = "#$C1_RED",
+  green    = "#$C2_GREEN",
+  yellow   = "#$C3_YELLOW",
+  blue     = "#$C4_BLUE",
+  magenta  = "#$C5_MAGENTA",
+  cyan     = "#$C6_CYAN",
+  white    = "#$C7_WHITE",
+  gray     = "#$C8_GRAY",
+}
+EOF
+
+# ==============================================================================
+# ATOMIC RELOAD COMMANDS (Signals fixed to strictly uppercase definitions)
 # ==============================================================================
 killall -USR2 waybar
 hyprctl reload
 killall -SIGUSR2 ghostty
 
-# Dynamic Tmux State Synchronization: Forces all background servers to reload configurations
 if [ -n "$TMUX" ]; then
-  tmux source-file "$HOME/.tmux.conf"
+    tmux source-file "$HOME/.tmux.conf"
 fi
