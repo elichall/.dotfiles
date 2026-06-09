@@ -4,7 +4,7 @@
 PALETTE_FILE="$HOME/.config/theme/palette.conf"
 WAYBAR_CSS="$HOME/.config/waybar/colors.css"
 TMUX_COLORS="$HOME/.config/tmux/colors.tmux"
-NVIM_PALETTE="$HOME/.config/nvim-lean/lua/lean/core/palette.lua"
+NVIM_PALETTE="$HOME/.config/nvim/lua/lean/core/palette.lua"
 
 # Ensure all structural target directories exist before writing assets
 mkdir -p "$HOME/.config/theme" "$HOME/.config/waybar" "$HOME/.config/tmux" \
