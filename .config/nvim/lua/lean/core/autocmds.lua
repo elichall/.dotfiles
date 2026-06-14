@@ -43,9 +43,9 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
       end
 
       if ft == "markdown" or ft == "tex" or ft == "plaintex" then
-        vim.cmd("colorscheme vague")
+        vim.cmd("colorscheme melange")
       elseif ft == "cpp" or ft == "c" then
-        vim.cmd("colorscheme vscode_modern")
+        vim.cmd("colorscheme vague")
       elseif ft == "python" then
         vim.cmd("colorscheme dark2026")
       else

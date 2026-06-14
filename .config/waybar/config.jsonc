@@ -38,12 +38,12 @@
         "on-click": "ghostty --class=com.waybar.tui -e bash -c 'wthrr; read -n 1 -p \"Press any key to exit...\"'"
     },
     "network": {
-        "format-wifi": "   {signalStrength}%",
-        "format-ethernet": "󰈀  Connected",
-        "format-disconnected": "  Offline",
+        "format-wifi": "  {signalStrength}%",
+        "format-ethernet": "󰈀 Connected",
+        "format-disconnected": " Offline",
         "on-click": "ghostty --class=com.waybar.tui -e wlctl",
         "tooltip-format": "    {ifname} via {gwaddr}",
-        "tooltip-format-wifi": "   {essid}\n    IP: {ipaddr}\n    Signal: {signalStrength}%\n {bandwidthUpBytes}   {bandwidthDownBytes}",
+        "tooltip-format-wifi": "  {essid}\n    IP: {ipaddr}\n    Signal: {signalStrength}%\n {bandwidthUpBytes}   {bandwidthDownBytes}",
         "tooltip-format-disconnected": "Disconnected"
     },
     "bluetooth": {
@@ -62,10 +62,10 @@
             "critical": 15
                 },
         "format": "{icon}  {capacity}%",
-        "format-charging": "  {capacity}%",
-        "format-plugged": "  {capacity}%",
-        "format-full": "   {capacity}%",
-        "format-not-charging": "   {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-full": " {capacity}%",
+        "format-not-charging": " {capacity}%",
         "format-icons": ["", "", "", "", ""],
         "interval": 60, 
         "tooltip-format": "Time Remaining: {time}\nPower Draw {power}W"
@@ -83,7 +83,7 @@
         "on-click": "ghostty --class=com.waybar.tui -e btop"
     },
     "memory": {
-        "format": "  {used}MB",
+        "format": " {used}MB",
         "on-click": "ghostty --class=com.waybar.tui -e btop",
         "tooltip-format": "RAM: {used:0.1f}GB / {total:0.1f}GB ({percentage}%)\nSwap: {swapUsed:0.1f}GB / {swapTotal:0.1f}GB ({swapPercentage}%)"
     }

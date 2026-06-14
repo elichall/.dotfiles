@@ -16,6 +16,21 @@ return {
     priority = 1000,
   },
   {
+    "rose-pine/neovim",
+    lazy = false,
+    priority = 1000,
+  },
+  {
+    "nyoom-engineering/oxocarbon.nvim",
+    lazy = false,
+    priority = 1000,
+  },
+  {
+    "savq/melange-nvim",
+    lazy = false,
+    priority = 1000,
+  },
+  {
     "LazyVim/LazyVim",
     optional = true,
     opts = { colorscheme = "lean_sync" },
