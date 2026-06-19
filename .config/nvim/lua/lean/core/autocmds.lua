@@ -49,8 +49,11 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
       elseif ft == "python" then
         vim.cmd("colorscheme dark2026")
       else
-        -- Revert to your custom default theme
-        vim.cmd("colorscheme lean_sync")
+        -- Attempt to load custom default theme, fallback to standard package on failure
+        local theme_ok, _ = pcall(vim.cmd, "colorscheme lean_sync")
+        if not theme_ok then
+          vim.cmd("colorscheme rose-pine")
+        end
       end
     end)
   end,

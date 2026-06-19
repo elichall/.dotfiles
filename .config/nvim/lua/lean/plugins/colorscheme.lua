@@ -37,11 +37,16 @@ return {
   },
   {
     "lean_sync",
-    dir = vim.fn.stdpath("config"), -- Mounts local path as a native package provider
+    dir = vim.fn.stdpath("config"), 
     lazy = false,
-    priority = 1000,                -- Forces immediate loading before editor interface draws
+    priority = 1000,                
     config = function()
-      vim.cmd("colorscheme lean_sync")
+      -- Safely verify custom theme existence before execution
+      local theme_ok, _ = pcall(vim.cmd, "colorscheme lean_sync")
+      if not theme_ok then
+        -- Native robust fallback theme bundled with Neovim
+        vim.cmd("colorscheme rose-pine")
+      end
     end,
   },
 }

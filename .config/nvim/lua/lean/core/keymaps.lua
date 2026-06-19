@@ -13,6 +13,7 @@ key.set("n", "<leader>x", "<cmd>close<cr>", { silent = true, desc = "Close Curre
 -- ==============================================================================
 key.set("n", "<leader>w", "<cmd>write!<CR>", { silent = true, desc = "Save Current Buffer" })
 key.set("n", "<leader>s", "<cmd>update!<CR><cmd>source<CR>", { silent = true, desc = "Save and Source Active File" })
+key.set("n", "<leader>q", "<cmd>write!<CR><cmd>quitall!<CR>", { silent = true, desc = "Quit Current Nvim Instance" })
 
 -- ==============================================================================
 -- REGISTER MANIPULATION (Yanking / Deleting to System Clipboard)
@@ -21,16 +22,12 @@ key.set({ "n", "v", "x" }, "<leader>y", '"+y', { silent = true, desc = "Yank Sel
 key.set({ "n", "v", "x" }, "<leader>d", '"+d', { silent = true, desc = "Delete Selection to System Clipboard" })
 
 -- ==============================================================================
--- LINE BOUNDARY NAVIGATION
--- ==============================================================================
-key.set({ "n", "v", "x" }, "H", "^", { silent = true, desc = "Jump to First Non-Blank Character" })
-key.set({ "n", "v", "x" }, "L", "$", { silent = true, desc = "Jump to Line Termination" })
-
--- ==============================================================================
 -- ISOLATED PLUGIN INTERFACES
 -- ==============================================================================
 key.set("n", "<leader>e", "<cmd>Oil<CR>", { silent = true, desc = "Open Oil File Explorer" })
-key.set("n", "<leader>f", "<cmd>Pick files<CR>", { silent = true, desc = "Fuzzy Find Workspace Files" })
+key.set('n', '<leader>f', function() MiniPick.builtin.files() end, { desc = "Pick Files Instantly" })
+key.set('n', '<leader>gl', "<cmd>Pick grep_live<CR>", { desc = "Pick Grep Phrases Dynamically" })
+key.set('n', '<leader>gs', "<cmd>Pick grep<CR>", { desc = "Pick Grep Phrases Statically" })
 key.set("n", "<leader>h", "<cmd>Pick help<CR>", { silent = true, desc = "Fuzzy Find Help Configurations" })
 
 -- Consistent Viewport Centering during high-velocity vertical searching
