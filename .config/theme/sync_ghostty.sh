@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # System target paths
-PALETTE_FILE="$HOME/.config/theme/palette.conf"
-WAYBAR_CSS="$HOME/.config/waybar/colors.css"
+HYPR_PALETTE="$HOME/.config/hypr/palette.lua"
 TMUX_COLORS="$HOME/.config/tmux/colors.tmux"
 NVIM_PALETTE="$HOME/.config/nvim/lua/lean/core/palette.lua"
+WAYBAR_CSS="$HOME/.config/waybar/colors.css"
 
 # Ensure all structural target directories exist before writing assets
 mkdir -p "$HOME/.config/theme" "$HOME/.config/waybar" "$HOME/.config/tmux" \
@@ -52,16 +52,19 @@ C6_CYAN=${C6_CYAN:-"89dceb"}
 C7_WHITE=${C7_WHITE:-"cdd6f4"}
 C8_GRAY=${C8_GRAY:-"585b70"}
 
-# [Previous Hyprland, Waybar, and Tmux file generations preserved intact]
-cat <<EOF > "$PALETTE_FILE"
-\$bg = rgb($BG)
-\$fg = rgb($FG)
-\$accent = rgb($C2_GREEN)
-\$muted = rgb($C8_GRAY)
-\$bg_hex = $BG
-\$fg_hex = $FG
-\$accent_hex = $C2_GREEN
-\$muted_hex = $C8_GRAY
+cat <<EOF > "$HYPR_PALETTE"
+local M = {}
+
+M.bg = "rgb($BG)"
+M.fg = "rgb($FG)"
+M.accent = "rgb($C2_GREEN)"
+M.muted = "rgb($C8_GRAY)"
+M.bg_hex = "0x$BG"
+M.fg_hex = "0x$FG"
+M.accent_hex = "0x$C2_GREEN"
+M.muted_hex = "0x$C8_GRAY"
+
+return M
 EOF
 
 cat <<EOF > "$WAYBAR_CSS"
