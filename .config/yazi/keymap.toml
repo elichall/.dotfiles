@@ -7,7 +7,7 @@ desc = "Drag and drop"
 [[mgr.prepend_keymap]]
 on = "y"
 run = [
-  '''shell -- echo "mode:copy"; for path in %*; do echo "file://$path"; done | wl-copy -t text/uri-list''',
+  '''shell '{ echo "mode:copy"; for path in %*; do echo "file://$path"; done; } | wl-copy -t text/uri-list' ''',
   "yank"
 ]
 desc = "Yank to Wayland Clipboard"
@@ -15,7 +15,7 @@ desc = "Yank to Wayland Clipboard"
 [[mgr.prepend_keymap]]
 on = "x"
 run = [
-  '''shell -- echo "mode:cut"; for path in %*; do echo "file://$path"; done | wl-copy -t text/uri-list''',
+  '''shell '{ echo "mode:cut"; for path in %*; do echo "file://$path"; done; } | wl-copy -t text/uri-list' ''',
   "yank --cut"
 ]
 desc = "Cut to Wayland Clipboard"
