@@ -1,7 +1,8 @@
-
 [filechooser]
+# Let cmd ONLY specify the path to your script execution logic
 cmd=/home/elichall/.config/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
 default_dir=/home/elichall
-[task]
-term=ghostty -e
 
+[task]
+# Handle the terminal instantiation and structural class injection here cleanly
+term=ghostty --class=com.yazi.portal --title="Yazi File Picker" -e

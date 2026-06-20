@@ -1,5 +1,14 @@
-
 ble-face -s filename_directory 'fg=blue'
-
 ble-face -s filename_other fg=white,nounderline
 
+function blerc/emacs-load-hook {
+  ## The default mapping of RET and C-m inserts newline with multiline commands
+  ## or incomplete commands.  With the following setting, RET and C-m always
+  ## causes the execution of the command even in the multiline mode or when the
+  ## command is not syntactically completed.
+
+  ble-bind -f 'C-a' accept-line
+
+  return 0
+}
+blehook/eval-after-load keymap_emacs blerc/emacs-load-hook

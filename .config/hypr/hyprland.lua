@@ -56,6 +56,10 @@ hl.env("XDG_SCREENSHOTS_DIR", "/home/elichall/Pictures/Screenshots")
 -----------------------
 ---- LOOK AND FEEL ----
 -----------------------
+-- Disable all workspace leaf animations for instantaneous switching
+hl.animation({ leaf = "workspaces", enabled = false })
+hl.animation({ leaf = "workspacesIn", enabled = false })
+hl.animation({ leaf = "workspacesOut", enabled = false })
 hl.config({
     general = {
         gaps_in = 4,
@@ -111,9 +115,12 @@ hl.config({
             { "layersOut", 1, 1.5, "linear", "fade" },
             { "fadeLayersIn", 1, 1.79, "almostLinear" },
             { "fadeLayersOut", 1, 1.39, "almostLinear" },
-            { "workspaces", 1, 1.94, "almostLinear", "fade" },
-            { "workspacesIn", 1, 1.21, "almostLinear", "fade" },
-            { "workspacesOut", 1, 1.94, "almostLinear", "fade" },
+            
+            -- Set speed to 0 for instantaneous switching
+            { "workspaces", 0, 0, "default" },
+            { "workspacesIn", 0, 0, "default" },
+            { "workspacesOut", 0, 0, "default" },
+            
             { "zoomFactor", 1, 7, "quick" },
         },
     },
@@ -254,6 +261,20 @@ hl.window_rule({
     center = true,
     size = { 900, 600 },
 })
+
+hl.window_rule({
+    name = "yazi-portal-dialog",
+    match = { 
+        class = "^(com\\.yazi\\.portal)$",
+        initial_class = "^(com\\.yazi\\.portal)$",
+        title = "^(Yazi File Picker)$"
+    },
+    float = true,
+    center = true,
+    size = { 1100, 700 },
+    stay_focused = true,
+})
+
 
 hl.window_rule({
     name = "suppress-maximize-events",

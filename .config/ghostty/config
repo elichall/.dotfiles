@@ -16,3 +16,6 @@ confirm-close-surface = false
 
 # Sourced dynamically by the global theme engine switcher
 config-file = ?~/.config/ghostty/active_theme
+
+# Force Ctrl+Enter to act as a raw, immediate execution line-feed
+keybind = ctrl+enter=text:\r
