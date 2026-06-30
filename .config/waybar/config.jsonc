@@ -13,7 +13,7 @@
         "format": "",
         "tooltip": false,
         "on-click-right": "ghostty --class=com.waybar.tui -e bash -c 'fastfetch; read -n 1 -p \"Press any key to exit...\"'",
-        "on-click": "wlogout --layout $HOME/.config/wlogout/layout --css $HOME/.config/wlogout/style.css --buttons-per-row 4 --protocol layer-shell"
+        "on-click": "rofi -show p -modi p:'rofi-power-menu'"
     },
     "hyprland/workspaces": {
         "format": "{name}",
@@ -34,8 +34,8 @@
         "format": "{}",
         "tooltip": true,
         "interval": 1800, /* Scrape interval: 30 minutes to minimize network overhead */
-        "exec": "curl -s 'wttr.in/?format=1' | sed 's/+//g'",
-        "on-click": "ghostty --class=com.waybar.tui -e bash -c 'wthrr; read -n 1 -p \"Press any key to exit...\"'"
+        // "on-click": "ghostty --class=com.waybar.tui -e bash -c 'wthrr; read -n 1 -p \"Press any key to exit...\"'",
+        "exec": "curl -s 'wttr.in/?format=1' | sed 's/+//g'"
     },
     "network": {
         "format-wifi": "  {signalStrength}%",
@@ -76,14 +76,14 @@
         "tooltip-format": "Clock Speed: {avg_frequency} GHz\n\nCore Load Breakdown:\n{usage_per_core}"
     },
     "temperature": {
-        "thermal-zone": 2, // Tells waybar to look at your CPU zone
+        "hwmon-path": "/sys/class/hwmon/hwmon7/temp1_input",
         "critical-threshold": 80,
-        "format": "🌡️ {temperatureC}°C",
-        "format-critical": "🔥 {temperatureC}°C",
+        "format": " {temperatureC}°C",
+        "format-critical": " {temperatureC}°C",
         "on-click": "ghostty --class=com.waybar.tui -e btop"
     },
     "memory": {
-        "format": " {used}MB",
+        "format": "  {used}GB",
         "on-click": "ghostty --class=com.waybar.tui -e btop",
         "tooltip-format": "RAM: {used:0.1f}GB / {total:0.1f}GB ({percentage}%)\nSwap: {swapUsed:0.1f}GB / {swapTotal:0.1f}GB ({swapPercentage}%)"
     }

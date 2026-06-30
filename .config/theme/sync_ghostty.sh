@@ -5,10 +5,11 @@ HYPR_PALETTE="$HOME/.config/hypr/palette.lua"
 TMUX_COLORS="$HOME/.config/tmux/colors.tmux"
 NVIM_PALETTE="$HOME/.config/nvim/lua/lean/core/palette.lua"
 WAYBAR_CSS="$HOME/.config/waybar/colors.css"
+ROFI_PALETTE="$HOME/.config/rofi/palette.rasi"
 
 # Ensure all structural target directories exist before writing assets
 mkdir -p "$HOME/.config/theme" "$HOME/.config/waybar" "$HOME/.config/tmux" \
-         "$HOME/.config/nvim/lua/lean/core"
+         "$HOME/.config/nvim/lua/lean/core" "$HOME/.config/rofi"
 
 # 1. Query Ghostty's raw runtime configuration tree
 G_CONFIG=$(ghostty +show-config)
@@ -107,6 +108,59 @@ return {
   gray     = "#$C8_GRAY",
 }
 EOF
+
+
+cat <<EOF > "$ROFI_PALETTE"
+/**
+ * Dynamic Rofi Layout-Ready Palette
+ * Generated dynamically from your central theme engine.
+ */
+
+* {
+    /* Color Primitives (With CC added to BG for 80% alpha transparency) */
+    theme-bg:      #${BG}CC;
+    theme-fg:      #$FG;
+    theme-accent:  #$C2_GREEN;
+    theme-muted:   #$C8_GRAY;
+    theme-red:     #$C1_RED;
+
+    /* Global Context Fallbacks */
+    background-color: transparent;
+    text-color:       @theme-fg;
+
+    /* Main Window Elements */
+    window-border:    @theme-accent;
+    window-bg:        @theme-bg;
+
+    /* Entry Box / Search Box Elements */
+    input-bg:         transparent; /* Keeps search container clean */
+    input-fg:         @theme-fg;
+    input-prompt:     @theme-accent;
+
+    /* List Rows - Normal State */
+    row-normal-bg:    transparent;
+    row-normal-fg:    @theme-fg;
+    row-alt-bg:       transparent;
+    row-alt-fg:       @theme-fg;
+
+    /* List Rows - Selected State */
+    row-select-bg:    @theme-accent;
+    row-select-fg:    #$BG; /* Flat fallback background for selection text readability */
+
+    /* List Rows - Urgent/Alert State */
+    row-urgent-bg:    @theme-red;
+    row-urgent-fg:    #$BG;
+
+    /* Structural Theme Refactoring Maps */
+    normal-background:           @row-normal-bg;
+    normal-foreground:           @row-normal-fg;
+    alternate-normal-background: @row-alt-bg;
+    alternate-normal-foreground: @row-alt-fg;
+    selected-normal-background:  @row-select-bg;
+    selected-normal-foreground:  @row-select-fg;
+}
+EOF
+
 
 # ==============================================================================
 # ATOMIC RELOAD COMMANDS (Signals fixed to strictly uppercase definitions)

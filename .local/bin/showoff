@@ -14,25 +14,25 @@ if [ "$MON_COUNT" -gt 1 ]; then
 fi
 
 kill_showoff() {
-  hyprctl dispatch submap reset
+  hyprctl dispatch 'hl.dsp.submap("reset")'
 
   if pgrep -f "$TERMINAL --class=magic-" >/dev/null; then
     # Toggle primary off if visible
     if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_PRIMARY'") | .specialWorkspace.name')" == "$WORKSPACE_PRI" ]; then
-      hyprctl dispatch focusmonitor "$MON_PRIMARY"
-      hyprctl dispatch togglespecialworkspace magic
+      hyprctl dispatch "hl.dsp.focus({ monitor = \"$MON_PRIMARY\" })"
+      hyprctl dispatch 'hl.dsp.workspace.toggle_special("magic")'
     fi
 
     # Toggle secondary off if visible
     if [ "$MON_COUNT" -gt 1 ]; then
       if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_SECONDARY'") | .specialWorkspace.name')" == "$WORKSPACE_SEC" ]; then
-        hyprctl dispatch focusmonitor "$MON_SECONDARY"
-        hyprctl dispatch togglespecialworkspace magic_sec
+        hyprctl dispatch "hl.dsp.focus({ monitor = \"$MON_SECONDARY\" })"
+        hyprctl dispatch 'hl.dsp.workspace.toggle_special("magic_sec")'
       fi
     fi
 
     # Restore original input focus
-    hyprctl dispatch focusmonitor "$ACTIVE_MONITOR"
+    hyprctl dispatch "hl.dsp.focus({ monitor = \"$ACTIVE_MONITOR\" })"
 
     sleep 0.1
 
@@ -60,11 +60,11 @@ fi
 
 # 3. Targeted Spawning
 # Explicitly force the primary dashboard to the primary display
-hyprctl dispatch exec "[workspace $WORKSPACE_PRI; monitor $MON_PRIMARY] $TERMINAL --class=magic-dash --background-opacity=0.7 -e bash -c '/home/$USER/.local/bin/magic-layout'"
+hyprctl dispatch "hl.dsp.exec_cmd(\"$TERMINAL --class=magic-dash --background-opacity=0.7 -e bash -c '/home/\$USER/.local/bin/magic-layout'\", { workspace = \"$WORKSPACE_PRI\", monitor = \"$MON_PRIMARY\" })"
 
 # If a secondary display is connected, spawn the rotator maximized on its own special workspace
 if [ "$MON_COUNT" -gt 1 ]; then
-  hyprctl dispatch exec "[workspace $WORKSPACE_SEC; monitor $MON_SECONDARY] $TERMINAL --class=magic-sec --background-opacity=0.7 -e bash -c '/home/$USER/.local/bin/term-rotator'"
+  hyprctl dispatch "hl.dsp.exec_cmd(\"$TERMINAL --class=magic-sec --background-opacity=0.7 -e bash -c '/home/\$USER/.local/bin/term-rotator'\", { workspace = \"$WORKSPACE_SEC\", monitor = \"$MON_SECONDARY\" })"
 fi
 
 # 4. Synchronous Render Polling & Toggling
@@ -73,27 +73,27 @@ for i in {1..20}; do
 
     # Deploy Primary
     if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_PRIMARY'") | .specialWorkspace.name')" != "$WORKSPACE_PRI" ]; then
-      hyprctl dispatch focusmonitor "$MON_PRIMARY"
-      hyprctl dispatch togglespecialworkspace magic
+      hyprctl dispatch "hl.dsp.focus({ monitor = \"$MON_PRIMARY\" })"
+      hyprctl dispatch 'hl.dsp.workspace.toggle_special("magic")'
     fi
 
     # Deploy Secondary
     if [ "$MON_COUNT" -gt 1 ]; then
       if [ "$(hyprctl monitors -j | jq -r '.[] | select(.name == "'$MON_SECONDARY'") | .specialWorkspace.name')" != "$WORKSPACE_SEC" ]; then
-        hyprctl dispatch focusmonitor "$MON_SECONDARY"
-        hyprctl dispatch togglespecialworkspace magic_sec
+        hyprctl dispatch "hl.dsp.focus({ monitor = \"$MON_SECONDARY\" })"
+        hyprctl dispatch 'hl.dsp.workspace.toggle_special("magic_sec")'
       fi
     fi
 
     # Restore original focus before intercepting inputs
-    hyprctl dispatch focusmonitor "$ACTIVE_MONITOR"
+    hyprctl dispatch "hl.dsp.focus({ monitor = \"$ACTIVE_MONITOR\" })"
     break
   fi
   sleep 0.1
 done
 
 # 5. Global Input Interception
-hyprctl dispatch submap showoff_idle
+hyprctl dispatch 'hl.dsp.submap("showoff_idle")'
 
 (
   exec -a showoff_watcher bash -c '
