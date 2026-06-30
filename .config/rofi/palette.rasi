@@ -1,0 +1,48 @@
+/**
+ * Dynamic Rofi Layout-Ready Palette
+ * Generated dynamically from your central theme engine.
+ */
+
+* {
+    /* Color Primitives (With CC added to BG for 80% alpha transparency) */
+    theme-bg:      #2c2525CC;
+    theme-fg:      #fff1f3;
+    theme-accent:  #adda78;
+    theme-muted:   #72696a;
+    theme-red:     #fd6883;
+
+    /* Global Context Fallbacks */
+    background-color: transparent;
+    text-color:       @theme-fg;
+
+    /* Main Window Elements */
+    window-border:    @theme-accent;
+    window-bg:        @theme-bg;
+
+    /* Entry Box / Search Box Elements */
+    input-bg:         transparent; /* Keeps search container clean */
+    input-fg:         @theme-fg;
+    input-prompt:     @theme-accent;
+
+    /* List Rows - Normal State */
+    row-normal-bg:    transparent;
+    row-normal-fg:    @theme-fg;
+    row-alt-bg:       transparent;
+    row-alt-fg:       @theme-fg;
+
+    /* List Rows - Selected State */
+    row-select-bg:    @theme-accent;
+    row-select-fg:    #2c2525; /* Flat fallback background for selection text readability */
+
+    /* List Rows - Urgent/Alert State */
+    row-urgent-bg:    @theme-red;
+    row-urgent-fg:    #2c2525;
+
+    /* Structural Theme Refactoring Maps */
+    normal-background:           @row-normal-bg;
+    normal-foreground:           @row-normal-fg;
+    alternate-normal-background: @row-alt-bg;
+    alternate-normal-foreground: @row-alt-fg;
+    selected-normal-background:  @row-select-bg;
+    selected-normal-foreground:  @row-select-fg;
+}
