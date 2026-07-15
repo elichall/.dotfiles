@@ -41,6 +41,9 @@ return {
           opts.desc = "Go to Definition"
           vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
 
+          pts.desc = "Go to Implementation"
+          vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
+
           opts.desc = "LSP Hover Information"
           vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
 

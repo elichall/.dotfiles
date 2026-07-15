@@ -9,6 +9,7 @@ return {
       "ribru17/blink-cmp-spell",
     },
     opts = {
+
       -- Explicitly drop the default keymaps layer to isolate our key actions
       keymap = {
         preset = "none",

@@ -26,7 +26,7 @@ opt.smartcase = true
 -- visual
 opt.termguicolors = true
 vim.g.markdown_folding = 1
-vim.opt.foldlevelstart = 99
+opt.foldlevelstart = 99
 
 -- other
 opt.swapfile = false

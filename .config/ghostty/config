@@ -9,6 +9,11 @@ cursor-style = block
 background-opacity = 0.90
 background-blur-radius = 20
 
+# disable fancy features
+font-feature = -calt
+font-feature = -liga
+font-feature = -dlig
+
 # Optimization: Ensures Wayland native protocol 
 command = /usr/bin/bash
 
