@@ -1,0 +1,26 @@
+[Unit]
+Description=Rclone Box Drive Mount Service
+After=network-online.target
+Wants=network-online.target
+AssertPathExists=%h/.config/rclone/rclone.conf
+
+[Service]
+Type=notify
+ExecStartPre=-/usr/bin/mkdir -p %h/Box
+ExecStart=/usr/bin/rclone mount boxdrive: %h/Box \
+    --config=%h/.config/rclone/rclone.conf \
+    --vfs-cache-mode full \
+    --vfs-cache-max-age 1h \
+    --vfs-cache-max-size 10G \
+    --dir-cache-time 1m \
+    --poll-interval 1m \
+    --allow-other \
+    --umask 0022 \
+    --buffer-size 32M
+
+ExecStop=/usr/bin/fusermount -u %h/Box
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
