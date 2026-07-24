@@ -4,8 +4,10 @@
   imports = [
     ./modules/hyprland.nix
     ./modules/desktop-stable.nix
+    ./modules/theme.nix
+    ./modules/showoff.nix
   ];
-  # Set up Home Manager state versioning constraints
+
   home.stateVersion = "26.05";
 
   home.username = "elichall";
@@ -18,8 +20,8 @@
     EDITOR = "nvim";
     FILEMANAGER = "yazi";
     TERM_FILE_CHOOSER = "yazi";
-    VISUAL="nvim";
-    SUDO_EDITOR="nvim";
+    VISUAL = "nvim";
+    SUDO_EDITOR = "nvim";
   };
 
   programs.git = {
@@ -30,47 +32,85 @@
 
   home.pointerCursor = {
     enable = true;
-    package = pkgs.bibata-cursors;
-    name = "Bibata-Modern-Classic";
+    package = pkgs.adwaita-icon-theme;
+    name = "Adwaita";
     size = 24;
-    
-    # Force Home Manager to export configuration layers for all toolkits
     gtk.enable = true;
     x11.enable = true;
   };
-  
-  gtk = {
+
+  gtk.iconTheme = {
+    package = pkgs.papirus-icon-theme;
+    name = "Papirus-Dark";
+  };
+
+  # XDG portal + MIME defaults
+  xdg = {
     enable = true;
-    cursorTheme = {
-      package = pkgs.bibata-cursors;
-      name = "Bibata-Modern-Classic";
-      size = 24;
+    mimeApps = {
+      enable = true;
+      defaultApplications = {
+        "text/html" = "org.mozilla.firefox.desktop";
+        "x-scheme-handler/http" = "org.mozilla.firefox.desktop";
+        "x-scheme-handler/https" = "org.mozilla.firefox.desktop";
+        "x-scheme-handler/about" = "org.mozilla.firefox.desktop";
+        "x-scheme-handler/unknown" = "org.mozilla.firefox.desktop";
+        "inode/directory" = "yazi.desktop";
+      };
+    };
+    desktopEntries.yazi = {
+      name = "Yazi";
+      exec = "yazi-open %f";
+      terminal = false;
+      mimeType = [ "inode/directory" ];
     };
   };
+
+  # Packages managed by home-manager not by the core tty system
+  home.packages = with pkgs; [
+    # gtk.portal must live in the user profile so the daemon finds it
+    xdg-desktop-portal-gtk
+    ghostty
+
+    # Global LSP servers (always on PATH)
+    nil # nix
+    marksman # markdown
+    lua-language-server # lua
+    texlab # latex
+    bash-language-server # bash
+
+    (writeShellScriptBin "yazi-open" ''ghostty -e bash -ci "yazi ''${1:-.}"'')
+  ];
 
   # ==========================================================================
   # PERSISTENT SYSTEM PLUGINS & UTILITIES
   # ==========================================================================
   programs.starship = {
     enable = true;
-    # blesh and starship have strict initialization orders
-    enableBashIntegration = false;
+    enableBashIntegration = false; # ble.sh must load first
 
     settings = {
-      # Prepend $os to the default layout matrix
-      format = "$os$directory$git_branch$git_status$character";
+      format = "$os$directory$nix_shell$git_branch$git_status$character";
       add_newline = false;
-
       line_break.disabled = true;
-
       cmd_duration.disabled = true;
 
-      # --- ISOLATED OS MODULE CONFIGURATION ---
-      os.disabled = false;
-      os.format = "[$symbol]($style) ";
-      os.style = "bold #74c7ec"; # Catppuccin Sapphire / NixOS Blue
+      os = {
+        disabled = false;
+        format = "[$symbol]($style) ";
+        style = "bold #74c7ec";
+        symbols.NixOS = "";
+      };
 
-      os.symbols.NixOS = ""; 
+      nix_shell = {
+        symbol = "❄️";
+        format = "via [$symbol$state](bold blue) ";
+        pure_msg = "pure";
+        impure_msg = "";
+        unknown_msg = "";
+        heuristic = false;
+        disabled = false;
+      };
     };
   };
 
@@ -82,14 +122,23 @@
   programs.fzf = {
     enable = true;
     enableBashIntegration = true;
-    #
-    # defaultOptions = [
-    #   "--bind 'ctrl-j:down,ctrl-k:up,ctrl-h:preview-up,ctrl-l:preview-down'"
-    #   "--color='fg:7,bg:-1,hl:3'"
-    #   "--color='fg+:15,bg+:8,hl+:3'"
-    #   "--color='info:2,prompt:6,pointer:3'"
-    #   "--color='marker:3,spinner:2,header:4'"
-    # ];
+  };
+
+  programs.direnv = {
+    enable = true;
+    enableBashIntegration = false;
+    nix-direnv.enable = true;
+    silent = true;
+    stdlib = ''
+      # Load nix-direnv stdlib (provides use_nix, use flake)
+      source ${pkgs.nix-direnv}/share/nix-direnv/direnvrc
+      # Load user lib/*.sh (direnv does not auto-load these)
+      direnv_config_dir_home="''${DIRENV_CONFIG_HOME:-''${XDG_CONFIG_HOME:-$HOME/.config}/direnv}"
+      for lib in "$direnv_config_dir_home/lib/"*.sh; do
+        source "$lib"
+      done
+      unset direnv_config_dir_home
+    '';
   };
 
   # ==========================================================================
@@ -100,7 +149,6 @@
     ble-face -s filename_other fg=white,nounderline
 
     function blerc/emacs-load-hook {
-      # Instantly accept the line using Ctrl-A
       ble-bind -f 'C-a' accept-line
       return 0
     }
@@ -112,7 +160,7 @@
   # ==========================================================================
   programs.bash = {
     enable = true;
-    
+
     historyControl = [ "ignoreboth" ];
     historySize = 1000;
     historyFileSize = 2000;
@@ -122,32 +170,36 @@
       la = "ls -A --color=auto";
       l = "ls -CF --color=auto";
       grep = "grep --color=auto";
-      snords = "sudo nixos-rebuild switch";
+      snorbs = "sudo nixos-rebuild switch";
     };
 
-    # 1. Force the terminal profile environment path hooks to load at the absolute top of the loop
     bashrcExtra = ''
       if [ -f ~/.nix-profile/etc/profile.d/hm-session-vars.sh ]; then
         . ~/.nix-profile/etc/profile.d/hm-session-vars.sh
       fi
     '';
 
-    # 2. Run interactive setup components in the strict order required by ble.sh
     initExtra = ''
       shopt -s histappend
       shopt -s checkwinsize
-
-      # Initialize ble.sh before any prompt configuration modifications occur
+      # initalize blesh first
       if [[ $- == *i* ]]; then
         source ${pkgs.blesh}/share/blesh/ble.sh --noattach
       fi
-
-      # Force Starship to execute its integration bindings *after* ble.sh loads
+      # initialize zoxide
+      eval "$(zoxide init bash)"
+      # initalize direnv (defines _direnv_hook function)
+      eval "$(${pkgs.direnv}/bin/direnv hook bash)"
+      # Sync direnv with ble.sh — direnv hook adds to PROMPT_COMMAND
+      # but ble.sh replaces it, so we re-register via blehook
+      if [[ ''${BLE_VERSION-} ]]; then
+        blehook PRECMD+='_direnv_hook'
+      fi
+      # initalize starship (hooks into blehook PRECMD automatically)
       if [[ $- == *i* ]]; then
         eval "$(${pkgs.starship}/bin/starship init bash --print-full-init)"
       fi
-
-      # Lock the final ble-attach execution at the absolute end of the shell initialization loop
+      # attach blesh
       [[ ''${BLE_VERSION-} ]] && ble-attach
     '';
   };
@@ -157,19 +209,15 @@
   # ==========================================================================
   programs.tmux = {
     enable = true;
-    shortcut = "Space"; # Rewrites 'set -g prefix C-Space' automatically
-    baseIndex = 1;      # Rewrites 'set -g base-index 1'
-    keyMode = "vi";     # Rewrites 'set-window-option -g mode-keys vi'
-    escapeTime = 0;     # Rewrites 'set -s escape-time 0'
-    mouse = true;       # Rewrites 'set -g mouse on'
+    shortcut = "Space";
+    baseIndex = 1;
+    keyMode = "vi";
+    escapeTime = 0;
+    mouse = true;
 
-    # NATIVE PLUGIN MANAGEMENT (Replaces TPM declarations)
     plugins = with pkgs.tmuxPlugins; [
       sensible
       vim-tmux-navigator
-      # tmux-yank
-      
-      # Plugin configuration blocks use attributes for extra configuration parameters
       {
         plugin = extrakto;
         extraConfig = ''
@@ -181,12 +229,14 @@
         plugin = resurrect;
         extraConfig = ''
           set -g @resurrect-strategy-nvim 'session'
+          set -g @resurrect-processes "opencode"
         '';
       }
       {
         plugin = continuum;
         extraConfig = ''
           set -g @continuum-restore 'on'
+          set -g @continuum-save-interval 10
         '';
       }
       {
@@ -195,34 +245,33 @@
           TMUX_FZF_LAUNCH_KEY="tab"
         '';
       }
+      {
+        plugin = yank;
+      }
     ];
 
-    # RAW TEXT CONFIGURATION OVERRIDES
     extraConfig = ''
-      # Core Settings for Terminal Compatibility
       set -g default-terminal "tmux-256color"
       set -ag terminal-overrides ",xterm-256color:RGB"
       set-option -g detach-on-destroy off
 
-      # Start window/pane indexing at 1 instead of 0
       set -g pane-base-index 1
       set-window-option -g pane-base-index 1
       set-option -g renumber-windows on
 
-      # Visual Theme Hook (Kept intact for cross-platform fallback)
       if-shell '[ -f ~/.config/tmux/colors.tmux ]' 'source-file ~/.config/tmux/colors.tmux'
 
-      # # --- YANKING & COPY MODE ---
-      # unbind [
-      # bind v copy-mode
-      # bind-key -T copy-mode-vi v send-key -X begin-selection
-      # bind-key -T copy-mode-vi C-v send-key -X rectangle-toggle
-      # bind-key -T copy-mode-vi y send-key -X copy-selection-and-cancel
-      # bind-key -T copy-mode-vi Escape send-key -X cancel
+      unbind [
+      bind v copy-mode
+      set-window-option -g mode-keys vi
+      bind-key -T copy-mode-vi v send-key -X begin-selection
+      bind-key -T copy-mode-vi C-v send-key -X rectangle-toggle
+      bind-key -T copy-mode-vi y send-key -X copy-selection-and-cancel
+      bind-key -T copy-mode-vi Escape send-key -X cancel
 
       bind p run "wl-paste -n | tmux load-buffer - ; tmux paste-buffer"
 
-      # --- 1. PANE MANAGEMENT LAYER ---
+      # Pane management
       unbind '"'
       unbind %
       bind | split-window -h -c "#{pane_current_path}"
@@ -236,14 +285,13 @@
 
       bind C-x confirm-before -p "Kill all other panes in window? (y/n)" "kill-pane -a"
 
-      # --- 2. WINDOW MANAGEMENT LAYER ---
+      # Window management
       bind n new-window -c "#{pane_current_path}"
       bind -n M-h previous-window
       bind -n M-l next-window
       bind X confirm-before -p "Kill current window? (y/n)" kill-window
 
-      # --- 3. SESSION MANAGEMENT LAYER ---
-      # INTERPOLATION: Nix extracts the precise path from the package variables
+      # Session management
       bind N run-shell -b "${pkgs.tmuxPlugins.tmux-fzf}/share/tmux-plugins/tmux-fzf/scripts/session.sh new"
       bind S run-shell "${pkgs.tmuxPlugins.resurrect}/share/tmux-plugins/resurrect/scripts/save.sh"
       bind s run-shell "${pkgs.tmuxPlugins.tmux-fzf}/share/tmux-plugins/tmux-fzf/scripts/session.sh"
@@ -259,28 +307,7 @@
   # ==========================================================================
   # GHOSTTY TERMINAL CONFIGURATION
   # ==========================================================================
-  programs.ghostty = {
-    enable = true;
-    enableBashIntegration = true;
-
-    settings = {
-      # Font declarations must be clean arrays or individual option assignments
-      font-family = [
-        "JetBrainsMono Nerd Font"
-        "Noto Sans Mono CJK JP"
-      ];
-      font-size = 13;
-      theme = "Melange Dark";
-      window-decoration = false;
-      cursor-style = "block";
-      background-opacity = 0.90;
-      background-blur-radius = 20;
-      confirm-close-surface = false;
-
-      # OPTIMIZATION: Dynamic string injection fixes the Nix store path resolution
-      command = "${pkgs.bash}/bin/bash";
-    };
-  };
+  # Managed via xdg.configFile in theme.nix for dynamic theme switching
 
   # ==========================================================================
   # YAZI FILE MANAGER CONFIGURATION
@@ -289,13 +316,6 @@
     enable = true;
     enableBashIntegration = true;
 
-    # System utilities needed by your custom ripdrag and wl-copy scripts
-    extraPackages = with pkgs; [
-      wl-clipboard
-      ripdrag
-    ];
-
-    # Core system rules matching yazi.toml requirements
     settings = {
       manager = {
         show_hidden = true;
@@ -303,56 +323,55 @@
       };
     };
 
-    # Declarative conversion of your custom keymaps.toml layout
-    keymap = {
-      manager.prepend_keymap = [
-        {
-          on = [ "<C-d>" ];
-          run = "shell 'ripdrag \"$@\" -A -x -i 2>/dev/null &' --confirm";
-          desc = "Drag and drop";
-        }
-        {
-          on = [ "y" ];
-          run = [
-            "shell '{ echo \"mode:copy\"; for path in %*; do echo \"file://$path\"; done; } | wl-copy -t text/uri-list'"
-            "yank"
-          ];
-          desc = "Yank to Wayland Clipboard";
-        }
-        {
-          on = [ "x" ];
-          run = [
-            "shell '{ echo \"mode:cut\"; for path in %*; do echo \"file://$path\"; done; } | wl-copy -t text/uri-list'"
-            "yank --cut"
-          ];
-          desc = "Cut to Wayland Clipboard";
-        }
-        {
-          on = [ "p" ];
-          run = [
-            ''
-              shell -- 
-              clipboard=$(wl-paste -t text/uri-list)
-              mode=$(echo "$clipboard" | grep "^mode:" | cut -d: -f2)
-              
-              echo "$clipboard" | grep "^file://" | sed 's|^file://||' | while read -r file; do
-                if [ "$mode" = "cut" ]; then
-                  mv "$file" ./
-                else
-                  copy -r "$file" ./
-                fi
-              done
-            ''
-            "unyank"
-          ];
-          desc = "Paste & Sync from Wayland Clipboard";
-        }
-      ];
-    };
+  };
+
+  xdg.configFile."yazi/keymap.toml" = {
+    force = true;
+    text = ''
+      [[mgr.prepend_keymap]]
+      on = "<C-d>"
+      run = "shell 'ripdrag %s -A -x -i 2>/dev/null &' --confirm"
+      desc = "Drag and drop"
+
+      [[mgr.prepend_keymap]]
+      on = "y"
+      run = [
+        ''''shell '{ echo "mode:copy"; for path in %s; do echo "file://$path"; done; } | wl-copy -t text/uri-list' '''',
+        "yank"
+      ]
+      desc = "Yank to Wayland Clipboard"
+
+      [[mgr.prepend_keymap]]
+      on = "x"
+      run = [
+        ''''shell '{ echo "mode:cut"; for path in %s; do echo "file://$path"; done; } | wl-copy -t text/uri-list' '''',
+        "yank --cut"
+      ]
+      desc = "Cut to Wayland Clipboard"
+
+      [[mgr.prepend_keymap]]
+      on = "p"
+      run = [
+        ''''shell --
+          clipboard=$(wl-paste -t text/uri-list)
+          mode=$(echo "$clipboard" | grep "^mode:" | cut -d: -f2)
+
+          echo "$clipboard" | grep "^file://" | sed 's|^file://||' | while read -r file; do
+            if [ "$mode" = "cut" ]; then
+              mv "$file" ./
+            else
+              cp -r "$file" ./
+            fi
+          done
+        '''',
+        "unyank"
+      ]
+      desc = "Paste & Sync from Wayland Clipboard"
+    '';
   };
 
   # ==========================================================================
-  # STARTUP INITALIZATIONS AND DAEMONS
+  # SYSTEMD USER SERVICES
   # ==========================================================================
   systemd.user.services.awww-daemon = {
     Unit = {
@@ -365,14 +384,19 @@
       ExecStart = "${pkgs.awww}/bin/awww-daemon";
       Restart = "on-failure";
     };
-    Install = { WantedBy = [ "graphical-session.target" ]; };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
   };
 
   systemd.user.services.waypaper-restore = {
     Unit = {
       Description = "Waypaper Post-Initialization Wallpaper Restoration";
       Requires = [ "awww-daemon.service" ];
-      After = [ "awww-daemon.service" "graphical-session.target" ];
+      After = [
+        "awww-daemon.service"
+        "graphical-session.target"
+      ];
       PartOf = [ "graphical-session.target" ];
     };
     Service = {
@@ -381,17 +405,37 @@
       ExecStart = "${pkgs.waypaper}/bin/waypaper --restore";
       RemainAfterExit = true;
     };
-    Install = { WantedBy = [ "graphical-session.target" ]; };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
+
+  systemd.user.services.rclone-box = {
+    Unit = {
+      Description = "Rclone Box Drive Mount Service";
+      AssertPathExists = "${config.home.homeDirectory}/.config/rclone/rclone.conf";
+    };
+    Service = {
+      Type = "notify";
+      ExecStartPre = "-${pkgs.coreutils}/bin/mkdir -p ${config.home.homeDirectory}/Box";
+
+      ExecStart = "${pkgs.rclone}/bin/rclone mount boxdrive: ${config.home.homeDirectory}/Box --config=${config.home.homeDirectory}/.config/rclone/rclone.conf --vfs-cache-mode full --vfs-cache-max-age 1h --vfs-cache-max-size 10G --dir-cache-time 1m --poll-interval 1m --allow-other --umask 0022 --buffer-size 32M";
+
+      ExecStop = "/run/wrappers/bin/fusermount3 -u ${config.home.homeDirectory}/Box";
+
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
   };
 
   # ==========================================================================
   # RUNTIME ENVIRONMENT SPLIT (Experimental Variant Engine)
   # ==========================================================================
   specialisation."quickshell-wip".configuration = {
-    # 1. Remove the stable panel layer to prevent layout clashing
     disabledModules = [ ./modules/desktop-stable.nix ];
-    
-    # 2. Inject your development environment parameters
     imports = [ ./modules/desktop-development.nix ];
   };
 }

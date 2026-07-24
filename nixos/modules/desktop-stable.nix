@@ -26,7 +26,7 @@
           format = "";
           tooltip = false;
           on-click-right = "ghostty --class=com.waybar.tui -e bash -c 'fastfetch; read -n 1 -p \"Press any key to exit...\"'";
-          on-click = "rofi -show p -modi p:'rofi-power-menu'";
+          on-click = "rofi -show p";
         };
 
         "hyprland/workspaces" = {
@@ -111,8 +111,9 @@
       };
     };
 
-    # Hardcoded dynamic CSS layout styling sheet string injects cleanly here
     style = ''
+      @import "colors.css";
+
       * {
           font-family: "JetBrains Mono", "Font Awesome 6 Free", "FontAwesome", sans-serif;
           font-size: 14px;
@@ -199,13 +200,15 @@
           color: @theme_fg;
           font-size: 13px;
       }
-
-      @define-color theme_bg #292522;
-      @define-color theme_fg #ece1d7;
-      @define-color theme_accent #78997a;
-      @define-color theme_muted #867462;
     '';
   };
+
+  # ==========================================================================
+  # Way Edges Wigets
+  # ==========================================================================
+  # programs.way-edges = {
+  #   enable = true;
+  # };
 
   # ==========================================================================
   # NATIVE ROFI MANAGEMENT (Wayland-Native)
@@ -248,96 +251,209 @@
   # ==========================================================================
   # Writes out your aesthetic structural geometry components directly to rofi
   xdg.configFile."rofi/config.rasi".text = ''
+    configuration {
+        /* 1. MODE & INITIALIZATION */
+        modi:                       "drun,calc,p:${pkgs.rofi-power-menu}/bin/rofi-power-menu";
+        show-icons:                 true;
+        display-drun:               " ";
+        display-calc:               " ";
+        drun-display-format:        "{name}";
+        window-format:              "{w} · {c} · {t}";
+        require-input:              true; /* Moved to correct scope */
+
+        /* 2. PLUGIN CONFIGURATIONS (Scalable Block) */
+        calc {
+            no-history:             true;  /* Forces Return to execute calc-command directly */
+            no-persist-history:     true;
+            calc-command:           "echo -n '{result}' | wl-copy";
+        }
+
+        /* 3. INTERACTIVE / MOUSE BEHAVIOR */
+        hover-select:               true;
+        me-select-entry:            "";
+        me-accept-entry:            "!MousePrimary";
+        kb-cancel:                  "MousePrimary,Escape";
+
+        /* 4. KEYBINDING REFACTOR (Clean Override) */
+        kb-remove-to-eol:           "";
+        kb-accept-entry:            "Return,KP_Enter";
+        kb-mode-next:               "Control+l,Control+Tab";
+        kb-mode-previous:           "Control+h,Control+Shift+Tab";
+        kb-remove-char-back:        "BackSpace,Shift+BackSpace";
+        kb-mode-complete:           "";
+        kb-row-up:                  "Up,Control+k";
+        kb-row-down:                "Down,Control+j";
+
+        timeout {
+            action: "kb-cancel";
+            delay:  0;
+        }
+        filebrowser {
+            directories-first: true;
+            sorting-method:    "name";
+        }
+    }
+
+    /* Import layout-ready palette variables */
+    @import "palette.rasi"
+
+    /*******************************************************************************
+     * STRUCTURAL LAYOUT (Aesthetic definitions only)
+     *******************************************************************************/
     window {
-        transparency:     "real";
-        location:         north;
-        anchor:           north;
-        fullscreen:       false;
-        width:            600px;
-        x-offset:         0px;
-        y-offset:         25%;
-        enabled:          true;
-        margin:           0px;
-        padding:          0px;
-        border:           2px solid;
-        border-radius:    10px;
-        cursor:           "default";
+        transparency:                "real";
+        location:                    north;
+        anchor:                      north;
+        fullscreen:                  false;
+        width:                       600px;
+        x-offset:                    0px;
+        y-offset:                    25%;
+        enabled:                     true;
+        margin:                      0px;
+        padding:                     0px;
+        border:                      2px solid;
+        border-radius:               10px;
+        border-color:                @window-border;
+        background-color:            @window-bg;
+        cursor:                      "default";
     }
 
     mainbox {
-        enabled:          true;
-        spacing:          0px;
-        margin:           0px;
-        padding:          20px;
-        background-color: transparent;
-        children:         [ "inputbar", "message", "listview" ];
+        enabled:                     true;
+        spacing:                     0px;
+        margin:                      0px;
+        padding:                     20px;
+        border:                      0px solid;
+        border-radius:               0px;
+        background-color:            transparent;
+        children:                    [ "inputbar", "message", "listview" ];
     }
 
     inputbar {
-        enabled:          true;
-        spacing:          10px;
-        margin:           0px;
-        padding:          10px 14px;
-        border-radius:    6px;
-        children:         [ "prompt", "entry" ];
+        enabled:                     true;
+        spacing:                     10px;
+        margin:                      0px;
+        padding:                     10px 14px;
+        border:                      0px solid;
+        border-radius:               6px;
+        background-color:            @input-bg;
+        text-color:                  @input-fg;
+        children:                    [ "prompt", "entry" ];
     }
 
     prompt {
-        enabled:          true;
-        background-color: transparent;
-        font:             "JetBrainsMono Nerd Font Bold 13";
+        enabled:                     true;
+        background-color:            transparent;
+        text-color:                  @input-prompt;
+        font:                        "JetBrainsMono Nerd Font Bold 13";
+    }
+
+    textbox-prompt-colon {
+        enabled:                     true;
+        expand:                      false;
+        str:                         "::";
+        background-color:            transparent;
+        text-color:                  inherit;
     }
 
     entry {
-        enabled:          true;
-        background-color: transparent;
-        cursor:           text;
-        placeholder:      "Search apps or evaluate expressions...";
-        font:             "JetBrainsMono Nerd Font 11";
+        enabled:                     true;
+        background-color:            transparent;
+        text-color:                  inherit;
+        cursor:                      text;
+        placeholder:                 "Search apps or evaluate expressions...";
+        placeholder-color:           @theme-muted;
+        font:                        "JetBrainsMono Nerd Font 11";
     }
 
     listview {
-        enabled:          true;
-        require-input:    true;
-        columns:          1;
-        lines:            8;
-        cycle:            true;
-        dynamic:          true;
-        scrollbar:        false;
-        layout:           vertical;
-        reverse:          false;
-        fixed-height:     false;
-        fixed-columns:    true;
-        spacing:          5px;
-        margin:           0px;
-        padding:          0px;
-        background-color: transparent;
-        cursor:           "default";
+        enabled:                     true;
+        require-input:               true;
+        columns:                     1;
+        lines:                       8;
+        cycle:                       true;
+        dynamic:                     true;
+        scrollbar:                   false;
+        layout:                      vertical;
+        reverse:                     false;
+        fixed-height:                false;  /* Crucial: allows listview to shrink to 0 rows */
+        fixed-columns:               true;
+        spacing:                     5px;
+        margin:                      0px;    /* Managed dynamically by elements */
+        padding:                     0px;
+        border:                      0px solid;
+        background-color:            transparent;
+        cursor:                      "default";
     }
 
     element {
-        enabled:          true;
-        spacing:          12px;
-        margin:           5px 0px 0px 0px;
-        padding:          8px 12px;
-        border-radius:    6px;
-        background-color: transparent;
-        cursor:           pointer;
+        enabled:                     true;
+        spacing:                     12px;
+        margin:                      5px 0px 0px 0px; /* Moves spacing here so empty lists collapse completely */
+        padding:                     8px 12px;
+        border:                      0px solid;
+        border-radius:               6px;
+        background-color:            transparent;
+        text-color:                  @row-normal-fg;
+        cursor:                      pointer;
+    }
+
+    element selected normal {
+        background-color:            @row-select-bg;
+        text-color:                  @row-select-fg;
+    }
+
+    element normal urgent {
+        background-color:            @row-urgent-bg;
+        text-color:                  @row-urgent-fg;
+    }
+
+    element selected urgent {
+        background-color:            @row-urgent-bg;
+        text-color:                  @row-urgent-fg;
     }
 
     element-icon {
-        background-color: transparent;
-        size:             24px;
-        cursor:           inherit;
+        background-color:            transparent;
+        text-color:                  inherit;
+        size:                        24px;
+        cursor:                      inherit;
     }
 
     element-text {
-        background-color: transparent;
-        highlight:        inherit;
-        cursor:           inherit;
-        vertical-align:   0.5;
-        horizontal-align: 0.0;
-        font:             "JetBrainsMono Nerd Font 11";
+        background-color:            transparent;
+        text-color:                  inherit;
+        highlight:                   inherit;
+        cursor:                      inherit;
+        vertical-align:              0.5;
+        horizontal-align:            0.0;
+        font:                        "JetBrainsMono Nerd Font 11";
+    }
+
+    message {
+        enabled:                     true;
+        margin:                      0px;
+        padding:                     0px;
+        border:                      0px solid;
+        background-color:            transparent;
+        text-color:                  @theme-fg;
+    }
+
+    error-message {
+        padding:                     15px;
+        border:                      2px solid;
+        border-radius:               6px;
+        border-color:                @theme-red;
+        background-color:            @window-bg;
+        text-color:                  @theme-fg;
+    }
+
+    textbox {
+        background-color:            transparent;
+        text-color:                  inherit;
+        vertical-align:              0.5;
+        horizontal-align:            0.0;
+        highlight:                   none;
     }
   '';
 }

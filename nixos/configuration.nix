@@ -1,43 +1,37 @@
 { config, pkgs, ... }:
-let 
+let
   home-manager = builtins.fetchTarball "https://github.com/nix-community/home-manager/archive/release-26.05.tar.gz";
 in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      # Home Manager
-      (import "${home-manager}/nixos")
-    ];
+  imports = [
+    ./hardware-configuration.nix
+    (import "${home-manager}/nixos")
+  ];
 
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-
     users.elichall = import ./home.nix;
   };
-  
-  # Bootloader.
+
+  # ==========================================================================
+  # SYSTEM LEVEL CONFIGURATION
+  # ==========================================================================
+
+  system.stateVersion = "26.05";
+
+  # Bootloader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.systemd-boot.configurationLimit = 2;
+  boot.loader.systemd-boot.configurationLimit = 3;
 
-  networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  # Swap
+  zramSwap.enable = true;
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
-
-  # Set your time zone.
+  # Time management
   time.timeZone = "America/Chicago";
 
-  # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
-
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "en_US.UTF-8";
     LC_IDENTIFICATION = "en_US.UTF-8";
@@ -50,154 +44,267 @@ in
     LC_TIME = "en_US.UTF-8";
   };
 
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
-  };
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # User account
   users.users.elichall = {
     isNormalUser = true;
     description = "Elijah";
-    extraGroups = [ "networkmanager" "wheel" "video" "audio" ];
-    packages = with pkgs; [];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "video"
+      "audio"
+    ];
   };
 
-  services.displayManager.ly = {
-    enable = true;
+  # Enable bash
+  programs.bash.enable = true;
 
+  # nix-ld: allows pre-compiled binaries to find system libraries
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    stdenv.cc.cc.lib
+    icu
+  ];
+
+  # Wayland/wlroots environment
+  environment.sessionVariables = {
+    WLR_RENDER_ALLOW_SOFTWARE = "1";
+    WLR_NO_HARDWARE_CURSORS = "1";
+    NIXOS_OZONE_WL = "1";
+  };
+
+  # Networking
+  networking.hostName = "t480-nixos";
+  networking.networkmanager.enable = true;
+
+  services.openssh = {
+    enable = true;
     settings = {
-      animation = "matrix"; # TUI background effect
-      bigclock = true;
+      PermitRootLogin = "no";
+      PasswordAuthentication = true;
+    };
+  };
+  services.tailscale.enable = true;
+  systemd.services.tailscaled.serviceConfig.Environment = [
+    "TS_DEBUG_FIREWALL_MODE=nftables"
+  ];
+
+  networking.nftables.enable = true;
+  networking.firewall = {
+    enable = true;
+    trustedInterfaces = [ config.services.tailscale.interfaceName ];
+    allowedTCPPorts = [ ];
+    allowedUDPPorts = [ config.services.tailscale.port ]; # Tailscale WireGuard
+    allowPing = false;
+  };
+
+  # network optimizations
+  systemd.network.wait-online.enable = false;
+  boot.initrd.systemd.network.wait-online.enable = false;
+
+  # Bluetooth
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+    settings = {
+      General = {
+        Enable = "Source,Sink,Media,Socket";
+      };
     };
   };
 
-  environment.interactiveShellInit = ''
-    if [ -e "#HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
-      . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" 
-    fi
-  '';
+  # Audio
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+  # Fuse (for rclone)
+  programs.fuse.userAllowOther = true;
+
+  # XDG portal
+  xdg.portal = {
+    enable = true;
+    extraPortals = [
+      pkgs.xdg-desktop-portal-hyprland
+    ];
+    config = {
+      common = {
+        default = [ "gtk" ];
+      };
+      Hyprland = {
+        default = [
+          "hyprland"
+          "gtk"
+        ];
+      };
+    };
+  };
+
+  # ==========================================================================
+  # GRAPHICAL AND DISPLAY
+  # ==========================================================================
+
+  services.displayManager.ly = {
+    enable = true;
+    settings = {
+      animation = "matrix";
+      bigclock = true;
+      session_log = ".local/state/ly-session.log";
+    };
+  };
 
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    withUWSM = true;
+    withUWSM = false;
   };
 
-  # enable bash
-  programs.bash.enable = true;
-
-  environment.sessionVariables = {
-    WLR_RENDER_ALLOW_SOFTWARE = "1";
-    WLR_NO_HARDWARE_CURSORS = "1";
-  };
-
-  # Audio system enable
-  security.rtkit.enable = true;
-  services.pipewire = {
-	enable = true;
-	alsa.enable = true;
-	alsa.support32Bit = true;
-	pulse.enable = true;
-  };
+  # ==========================================================================
+  # PACKAGES AND FONTS
+  # ==========================================================================
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-color-emoji
   ];
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
+  # System-only packages (HM-managed programs removed from here)
   environment.systemPackages = with pkgs; [
-  	# system resources
-	  gcc
-	  ripgrep
-	  unzip
-	  wl-clipboard
-	  grimblast
+    ripgrep
+    ripdrag
+    unzip
+    wl-clipboard
+    grimblast
     waypaper
     awww
-    quickshell
-    waybar
-    # tailscale
-    # hypridle
+    tailscale
+    hypridle
+    rclone
+    brightnessctl
+    xdg-utils
+    # quickshell
+    # way-edges
 
-    # command line resources
+    # CLI tools (not managed by HM)
     tree-sitter
-    fzf
-    zoxide
-    blesh
-    starship
     fastfetch
-    git
-    # docker
-    # podman
+    docker
 
-    # tui
-    tmux
+    # TUI apps (not managed by HM)
     neovim
-    yazi
-    # wlctl
-    # bluetui
-    # btop
-    # gdu
+    opencode
+    bluetui
+    btop
+    gdu
 
-    # apps
-    firefox
-    ghostty
-    rofi
-    rofi-calc
-    rofi-power-menu
-    # bitwarden-cli
-    # moonlight-qt
-    # obsidian
-    # obs-studio
-
-    # fluff
-    # cava
-    # cmatrix
-    # cmatrix
-    # cowsay
-    # lolcat
-    # pipes
-    # sl
-    # fortune
+    # Showoff dashboard dependencies
+    tty-clock
+    gping
+    cava
+    cmatrix
+    cbonsai
+    asciiquarium-transparent
+    sl
+    lolcat
+    cowsay
+    # weathr
   ];
 
-  nixpkgs.config.permittedInsecurePackages = [
-  	"electron-39.8.10"
-	];
+  # Flatpak
+  services.flatpak.enable = true;
+  fonts.fontDir.enable = true;
+  # --- Flatpak Apps ---
+  # Browser # chose later
+  # Flatseal # manages permissions for flatpak apps
+  # moonlight-qt # remote desktop app
+  # obsidian # notes app
+  # obs-studio # recording app
+  # zotero # research paper app
+  # steam # games
+  # FreeCAD # cad
+  # zoom # meetings
+  # prism # minecraft launcher
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  # ==========================================================================
+  # SERVICES
+  # ==========================================================================
 
-  # List services that you want to enable:
+  services.power-profiles-daemon.enable = false;
+  services.tlp = {
+    enable = true;
+    settings = {
+      START_CHARGE_THRESH_BAT0 = 75;
+      STOP_CHARGE_THRESH_BAT0 = 80;
 
-  services.spice-vdagentd.enable = true;
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
 
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "balance_power";
 
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
+      PLATFORM_PROFILE_ON_AC = "performance";
+      PLATFORM_PROFILE_ON_BAT = "low-power";
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+      PCIE_ASPM_ON_AC = "default";
+      PCIE_ASPM_ON_BAT = "powersupersave";
+    };
+  };
 
-  zramSwap.enable = true;
+  # ==========================================================================
+  # NIX SETTINGS & SECURITY
+  # ==========================================================================
 
-  system.stateVersion = "26.05"; # Did you read the comment?
+  nix.settings = {
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    auto-optimise-store = true;
+    sandbox = true;
+  };
 
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+
+  # Kernel sysctl hardening
+  boot.kernel.sysctl = {
+    "net.ipv4.conf.all.rp_filter" = 1;
+    "net.ipv4.conf.default.rp_filter" = 1;
+    "net.ipv4.conf.all.accept_redirects" = 0;
+    "net.ipv4.conf.all.send_redirects" = 0;
+    "net.ipv4.conf.default.send_redirects" = 0;
+    "net.ipv6.conf.all.accept_redirects" = 0;
+    "net.ipv6.conf.default.accept_redirects" = 0;
+    "net.ipv4.conf.all.accept_source_route" = 0;
+    "net.ipv4.conf.default.accept_source_route" = 0;
+    "net.ipv6.conf.all.accept_source_route" = 0;
+    "net.ipv6.conf.default.accept_source_route" = 0;
+  };
+
+  # ==========================================================================
+  # SYSTEM MAINTENANCE & HARDWARE RELIABILITY
+  # ==========================================================================
+
+  # Solid State Drive TRIM
+  # Maintains NVMe flash cell degradation and write speeds
+  services.fstrim.enable = true;
+  # Firmware Update Daemon
+  # Allows updating BIOS, UEFI, and peripheral firmware directly via `fwupdmgr`
+  services.fwupd.enable = true;
+  # AMD CPU Microcode
+  # Ensures the kernel loads the latest security and stability patches for the CPU
+  hardware.cpu.intel.updateMicrocode = true;
+  # Out-Of-Memory (OOM) Protection
+  # Prevents hard system lockups during heavy RAM compilation workloads by killing
+  # memory-hogging processes before the kernel freezes
+  services.earlyoom.enable = true;
 }

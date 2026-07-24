@@ -1,49 +1,37 @@
 { config, pkgs, ... }:
 
 let
-  # --- Program Variables String Bindings ---
   terminal = "ghostty";
   tmux = "ghostty -e bash -c 'tmux start-server; tmux has-session -t main 2>/dev/null && exec tmux attach-session -t main || exec tmux new-session -s main'";
   menu = "pkill rofi || rofi -show drun -modi drun,calc";
-  browser = "firefox";
-  
+  browser = "flatpak run org.mozilla.firefox";
+
   brightnessU = "brightnessctl set 5%+";
   brightnessD = "brightnessctl set 5%-";
   volumeU = "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+";
   volumeD = "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-";
   muteAudio = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
   muteMic = "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
-  
+
   screenSnip = "grimblast copysave area";
   screenShot = "grimblast copysave screen";
   fileManager = "ghostty -e bash -ci 'yazi'";
-  passwordManager = "bitwarden-desktop";
-  systemManager = "rofi -show p -modi p:'rofi-power-menu'";
-  
-  # Properly escaped to allow the runtime shell to resolve the environment path
-  # sleepScreen = "/home/''${USER}/.local/bin/showoff";
+  systemManager = "rofi -show p";
 
 in {
-  # ==========================================================================
-  # NATIVE GRAPHICS ENGINE ENGAGEMENT (Home Manager 26.05 Lua Pipeline)
-  # ==========================================================================
   wayland.windowManager.hyprland = {
     enable = true;
-    
-    # Instruct Home Manager to use the native Lua target engine
-    configType = "lua"; 
-    
-    # Hand off execution tracking exclusively to UWSM
-    systemd.enable = false; 
 
-    # Inject your complete operational Lua configuration layer natively
+    configType = "lua";
+
+    systemd.enable = false;
+
     extraConfig = ''
       -- --- SINGLE SOURCE OF TRUTH COLOR LINKING ---
       local status, theme = pcall(require, "palette")
       if not status then
-        -- Low-overhead fallback state if the generation script hasn't run yet
         theme = {
-          accent = "rgb(74, 199, 236)", -- Nix Blue / Sapphire fallback
+          accent = "rgb(74, 199, 236)",
           muted = "rgb(88, 91, 112)",
           bg = "rgb(17, 17, 27)"
         }
@@ -71,7 +59,6 @@ in {
       local screenSnip = "${screenSnip}"
       local screenShot = "${screenShot}"
       local fileManager = "${fileManager}"
-      local passwordManager = "${passwordManager}"
       local systemManager = "${systemManager}"
 
       -------------------
@@ -79,16 +66,15 @@ in {
       -------------------
       hl.on("hyprland.start", function()
         hl.exec_cmd("waybar")
-        hl.exec_cmd("albert")
-        -- hl.exec_cmd("hyprctl setcursor Adwaita 24")
-        hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP TERMCMD")
+        hl.exec_cmd("way-edges")
+        hl.exec_cmd("waypaper --restore")
+        hl.exec_cmd("hypridle")
+        hl.exec_cmd("bash -c 'systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP NIXOS_OZONE_WL && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP NIXOS_OZONE_WL && systemctl --user restart xdg-desktop-portal-hyprland xdg-desktop-portal'")
       end)
 
       -------------------------------
       -- -- ENVIRONMENT VARIABLES -- --
       -------------------------------
-      -- hl.env("XCURSOR_THEME", "Adwaita")
-      -- hl.env("XCURSOR_SIZE", "24")
       hl.env("XDG_SCREENSHOTS_DIR", "/home/elichall/Pictures/Screenshots")
 
       -----------------------
@@ -186,8 +172,6 @@ in {
       hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("[float] " .. fileManager))
       hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
       hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(menu))
-      -- hl.bind(mainMod .. " + S", hl.dsp.exec_cmd(sleepScreen))
-      hl.bind(mainMod .. " + P", hl.dsp.exec_cmd(passwordManager))
       hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
       hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd(screenSnip))
       hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(screenShot))
@@ -228,13 +212,13 @@ in {
       ------------------
       -- -- SUBMAPS -- --
       ------------------
-      hl.bind(mainMod .. " + S", hl.dsp.submap("showoff_idle"))
+      hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("showoff"))
 
       hl.define_submap("showoff_idle", function()
-        hl.bind("catchall", hl.dsp.exec_cmd("~/.local/bin/showoff --kill"))
-        hl.bind("mouse:272", hl.dsp.exec_cmd("~/.local/bin/showoff --kill"), { mouse = true })
-        hl.bind("mouse:273", hl.dsp.exec_cmd("~/.local/bin/showoff --kill"), { mouse = true })
-        hl.bind("mouse:274", hl.dsp.exec_cmd("~/.local/bin/showoff --kill"), { mouse = true })
+        hl.bind("catchall", hl.dsp.exec_cmd("showoff --kill"))
+        hl.bind("mouse:272", hl.dsp.exec_cmd("showoff --kill"), { mouse = true })
+        hl.bind("mouse:273", hl.dsp.exec_cmd("showoff --kill"), { mouse = true })
+        hl.bind("mouse:274", hl.dsp.exec_cmd("showoff --kill"), { mouse = true })
         hl.bind("escape", hl.dsp.submap("reset"))
       end)
 
